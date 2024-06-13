@@ -7,7 +7,7 @@
 #include "textures.h"
 #include "timer.h"
 #include "startmenu.h"
-#include "gamescene.h"
+#include "chatscene.h"
 #define PI 3.14f
 #define Deg2Rad PI/180
 
@@ -18,7 +18,7 @@ int main(){
     //起動画面　
     StartMenu(camera);
     //ゲーム画面
-    GameScene(camera);
+    ChatScene(camera);
     
     FreeCamera(camera);
     free(camera);

@@ -9,10 +9,10 @@
 #include "timer.h"
 #include "math.h"
 #include "physics.h"
-#ifdef STARTMENU_H
+#ifdef CHATSCENE_H
 #else
-#define STARTMENU_H
-void StartMenu(Camera* camera){
+#define CHATSCENE_H
+void ChatScene(Camera* camera){
     camera->pos=Vec3(0,0,-1);
     while (1)
     {
@@ -31,8 +31,7 @@ void StartMenu(Camera* camera){
         Draw3DText
         */
         //Draw3DText(camera,"3D",0.2f,TRS(Vec3(0,-1,3),Vec3(0,time,0),Vec3(1,1,1)),5);
-        Draw3DText(camera,"LINE",0.2f,TRS(Vec3(1,0,8),Vec3(0,0,0),Vec3(1,1,1)),5);
-        Draw3DText(camera,fmod(time*4,2)<1?"Press A":"",0.1f,TRS(Vec3(0.5,-5,8),Vec3(0,0,0),Vec3(1,1,1)),255);
+        //Draw3DText(camera,"SUIKA GAME",0.2f,TRS(Vec3(1,0,8),Vec3(0,0,0),Vec3(1,1,1)),39);
 
         //Draw3DModel(camera,*Sphere(),TRS(Vec3(7,2-fmod(time,8),12),Vec3(time,0,0),Vec3_Mul(PINEAPPLE_SIZE*0.8,Vec3(1,1,1))),*PineappleTexture(),1);
         //Draw3DModel(camera,*Sphere(),TRS(Vec3(6,2-fmod(time+4,8),12),Vec3(time,0,0),Vec3_Mul(RINGO_SIZE*0.8,Vec3(1,1,1))),*RingoTexture(),1);
