@@ -11,7 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#define SIZE 2048
+
+#include <fft.h>
+
+#define SIZE 4096
 int server(int port){
  int ss;
     struct sockaddr_in addr;
@@ -61,6 +64,10 @@ int client(const char* ip,int port){
     return s;
 }
 int main(int argc, char *argv[]) {
+    // サンプリング周波数
+    int fs = 48000;
+    // 音声の周波数帯の離散スペクトル値の数
+    int n = SIZE*4000/fs;
     int s=0;
     if (argc == 3) {
         s=client(argv[1],atoi(argv[2]));
@@ -68,22 +75,37 @@ int main(int argc, char *argv[]) {
     if (argc == 2) {
         s=server(atoi(argv[1]));
     }
-    FILE *rec_fp = popen("rec -q -b 16 -c 1 -r 44100 -t raw -", "r");
-    FILE *play_fp = popen("play -t raw -b 16 -c 1 -e s -r 44100 -", "w");
+    FILE *rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw -", "r");
+    FILE *play_fp = popen("play -t raw -b 16 -c 1 -e s -r 48000 -", "w");
     if (rec_fp == NULL) {
         perror("popen");
         close(s);
         return 1;
     }
     // recから読み込んだデータをクライアントに送信
+    complex double * X = calloc(sizeof(complex double), SIZE);
+    complex double * Y = calloc(sizeof(complex double), SIZE);
+    complex double * Z = calloc(sizeof(complex double), SIZE);  // 受け取り用(0埋めしておく)
+    zero_clear(Z,SIZE);
     while (1) {
         short data[SIZE];
         if(fread(&data, sizeof(short),SIZE,rec_fp)<=0){
             break;
         }
-        ssize_t send_data = send(s,&data, SIZE* sizeof(short), 0);  // クライアントにデータを送信
-        ssize_t read_data = read(s,&data, SIZE* sizeof(short));  // クライアントからデータを受信
+        sample_to_complex(data,X, SIZE);
+        fft(X,Y,SIZE);
+
+        // ssize_t send_data = send(s,&data, SIZE* sizeof(short), 0);  // クライアントにデータを送信
+        // ssize_t read_data = read(s,&data, SIZE* sizeof(short));  // クライアントからデータを受信
+
+        ssize_t send_data = send(s,&Y, n* sizeof(complex double), 0);  // クライアントにデータを送信
+        ssize_t read_data = read(s,&Y, n* sizeof(complex double));  // クライアントからデータを受信
+
+        ifft(Y,Z,SIZE);
+        // fwrite(&data,sizeof(short),SIZE, play_fp);
+        complex_to_sample(X,data,SIZE);
         fwrite(&data,sizeof(short),SIZE, play_fp);
+
         //write(1,&data, sizeof(data));  // recからデータを読み込む
     }
     pclose(rec_fp);
