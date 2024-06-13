@@ -11,7 +11,9 @@
 #include <unistd.h>
 #include "pthread.h"
 #include "filedata.h"
-
+#include "complex.h"
+#include "../fft.h"
+#define N SampleSize*4000/48000
 typedef struct 
 {
     char ip[256];
@@ -21,7 +23,7 @@ typedef struct
 void* server_thread(void* param){
     ThreadInfo info=*(ThreadInfo*)param;
     FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw -", "r");
-    FILE* play_fp = popen("play -t raw -b 16 -c 1 -e s -r 12000 -", "w");
+    FILE* play_fp = popen("play -t raw -b 16 -c 1 -e s -r 48000 -", "w");
     int ss;
     struct sockaddr_in addr;
     ss = socket(PF_INET, SOCK_STREAM, 0);
@@ -55,26 +57,28 @@ void* server_thread(void* param){
     }
     FileData sentdata;
     FileData receiveddata;
-    short recdata[SampleSize*4];
+    short recdata[SampleSize];
+    complex double * X = calloc(sizeof(complex double), SampleSize);
+    complex double * Y = calloc(sizeof(complex double), SampleSize);
+    complex double * Z = calloc(sizeof(complex double), SampleSize);  // 受け取り用(0埋めしておく)
     while(1){
-        size_t rec_data=fread(recdata, sizeof(short),SampleSize*4,rec_fp);
-        for(int i=0;i<SampleSize;i++){
-            sentdata.sample[i]=recdata[i*4];
+        zero_clear(Z,SampleSize);
+        if(fread(&recdata, sizeof(short),SampleSize,rec_fp)<=0){
+            break;
         }
-        strcpy(sentdata.name,"serverman");
-        if(rec_data>0){
-            ssize_t send_data = send(client_s,&sentdata,sizeof(FileData), 0);  // クライアントにデータを送信
-        }
-        ssize_t read_data = read(client_s,&receiveddata, sizeof(FileData));  // クライアントからデータを受信
-        if(read_data>0){
-            fwrite(receiveddata.sample,sizeof(short),SampleSize, play_fp);
-        }
+        sample_to_complex(recdata,X, SampleSize);
+        fft(X,Y,SampleSize);
+        ssize_t send_data = send(client_s, Y, N* sizeof(complex double), 0);  // クライアントにデータを送信
+        ssize_t read_data = read(client_s, Z, N* sizeof(complex double));  // クライアントからデータを受信
+        ifft(Z,X,SampleSize);
+        complex_to_sample(X,recdata,SampleSize);
+        fwrite(recdata,sizeof(short),SampleSize, play_fp);
     }
 }
 void* client_thread(void* param){
     ThreadInfo info=*(ThreadInfo*)param;
     FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw -", "r");
-    FILE* play_fp = popen("play -t raw -b 16 -c 1 -e s -r 12000 -", "w");
+    FILE* play_fp = popen("play -t raw -b 16 -c 1 -e s -r 48000 -", "w");
     printf("%s:%d\n",info.ip,info.port);
     int s=socket(PF_INET,SOCK_STREAM,0);
     struct sockaddr_in addr;
@@ -87,20 +91,22 @@ void* client_thread(void* param){
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
     FileData sentdata;
     FileData receiveddata;
-    short recdata[SampleSize*4];
+    short recdata[SampleSize];
+    complex double * X = calloc(sizeof(complex double), SampleSize);
+    complex double * Y = calloc(sizeof(complex double), SampleSize);
+    complex double * Z = calloc(sizeof(complex double), SampleSize);  // 受け取り用(0埋めしておく)
     while(1){
-        size_t rec_data=fread(recdata, sizeof(short),SampleSize*4,rec_fp);
-        for(int i=0;i<SampleSize;i++){
-            sentdata.sample[i]=recdata[i*4];
+        zero_clear(Z,SampleSize);
+        if(fread(&recdata, sizeof(short),SampleSize,rec_fp)<=0){
+            break;
         }
-        strcpy(sentdata.name,"serverman");
-        if(rec_data>0){
-            ssize_t send_data = send(s,&sentdata,sizeof(FileData), 0);  // クライアントにデータを送信
-        }
-        ssize_t read_data = read(s,&receiveddata, sizeof(FileData));  // クライアントからデータを受信
-        if(read_data>0){
-            fwrite(receiveddata.sample,sizeof(short),SampleSize, play_fp);
-        }
+        sample_to_complex(recdata,X, SampleSize);
+        fft(X,Y,SampleSize);
+        ssize_t send_data = send(s, Y, N* sizeof(complex double), 0);  // クライアントにデータを送信
+        ssize_t read_data = read(s, Z, N* sizeof(complex double));  // クライアントからデータを受信
+        ifft(Z,X,SampleSize);
+        complex_to_sample(X,recdata,SampleSize);
+        fwrite(recdata,sizeof(short),SampleSize, play_fp);
     }
 }
 void GenServer(int port){
