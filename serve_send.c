@@ -12,7 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <fft.h>
+#include "fft.h"
 
 #define SIZE 4096
 int server(int port){
@@ -68,6 +68,9 @@ int main(int argc, char *argv[]) {
     int fs = 48000;
     // 音声の周波数帯の離散スペクトル値の数
     int n = SIZE*4000/fs;
+    if (n>SIZE){
+        n=SIZE;
+    }
     int s=0;
     if (argc == 3) {
         s=client(argv[1],atoi(argv[2]));
@@ -86,9 +89,9 @@ int main(int argc, char *argv[]) {
     complex double * X = calloc(sizeof(complex double), SIZE);
     complex double * Y = calloc(sizeof(complex double), SIZE);
     complex double * Z = calloc(sizeof(complex double), SIZE);  // 受け取り用(0埋めしておく)
-    zero_clear(Z,SIZE);
     while (1) {
         short data[SIZE];
+        zero_clear(Z,SIZE);
         if(fread(&data, sizeof(short),SIZE,rec_fp)<=0){
             break;
         }
@@ -98,10 +101,12 @@ int main(int argc, char *argv[]) {
         // ssize_t send_data = send(s,&data, SIZE* sizeof(short), 0);  // クライアントにデータを送信
         // ssize_t read_data = read(s,&data, SIZE* sizeof(short));  // クライアントからデータを受信
 
-        ssize_t send_data = send(s,&Y, n* sizeof(complex double), 0);  // クライアントにデータを送信
-        ssize_t read_data = read(s,&Y, n* sizeof(complex double));  // クライアントからデータを受信
+        ssize_t send_data = send(s, Y, n* sizeof(complex double), 0);  // クライアントにデータを送信
+        ssize_t read_data = read(s, Z, n* sizeof(complex double));  // クライアントからデータを受信
+        
+        // print_complex(stdout,Z,SIZE);
+        ifft(Z,X,SIZE);
 
-        ifft(Y,Z,SIZE);
         // fwrite(&data,sizeof(short),SIZE, play_fp);
         complex_to_sample(X,data,SIZE);
         fwrite(&data,sizeof(short),SIZE, play_fp);
