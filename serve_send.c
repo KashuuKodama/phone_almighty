@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include "fft.h"
+#include "echo_cancel.h"
 
 #define SIZE 4096
 int server(int port){
@@ -85,10 +86,20 @@ int main(int argc, char *argv[]) {
         close(s);
         return 1;
     }
-    // recから読み込んだデータをクライアントに送信
+
+    // 標準入力から取り込んだデータ
     complex double * X = calloc(sizeof(complex double), SIZE);
+    // 標準出力から出力したデータ
+    complex double * L = calloc(sizeof(complex double), SIZE);  // エコーキャンセル時に用いる
+    // スペクトル通信用
     complex double * Y = calloc(sizeof(complex double), SIZE);
     complex double * Z = calloc(sizeof(complex double), SIZE);  // 受け取り用(0埋めしておく)
+    // エコーキャンセル用
+    complex double filter[FILTER_LENGTH];
+    complex double estimated_echo[SIZE];
+    init_filter(filter, FILTER_LENGTH);
+    
+    // recから読み込んだデータをクライアントに送信
     while (1) {
         short data[SIZE];
         zero_clear(Z,SIZE);
@@ -96,6 +107,14 @@ int main(int argc, char *argv[]) {
             break;
         }
         sample_to_complex(data,X, SIZE);
+
+        /* XをLを用いてエコーキャンセル*/
+        estimate_echo(filter, L, estimated_echo, SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            X[i] -= estimated_echo[i];
+        }
+        update_filter(filter, Z, X, SIZE);
+
         fft(X,Y,SIZE);
 
         // ssize_t send_data = send(s,&data, SIZE* sizeof(short), 0);  // クライアントにデータを送信
@@ -105,10 +124,10 @@ int main(int argc, char *argv[]) {
         ssize_t read_data = read(s, Z, n* sizeof(complex double));  // クライアントからデータを受信
         
         // print_complex(stdout,Z,SIZE);
-        ifft(Z,X,SIZE);
+        ifft(Z,L,SIZE);
 
         // fwrite(&data,sizeof(short),SIZE, play_fp);
-        complex_to_sample(X,data,SIZE);
+        complex_to_sample(L,data,SIZE);
         fwrite(&data,sizeof(short),SIZE, play_fp);
 
         //write(1,&data, sizeof(data));  // recからデータを読み込む
