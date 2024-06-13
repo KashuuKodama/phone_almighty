@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#define SIZE 4096
+#define SIZE 2048
 int server(int port){
  int ss;
     struct sockaddr_in addr;
