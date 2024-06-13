@@ -70,10 +70,10 @@ int main(int argc, char *argv[]) {
     int n = SIZE*4000/fs;
     int s=0;
     if (argc == 3) {
-        GenClient(argv[1],atoi(argv[2]));
+        s=client(argv[1],atoi(argv[2]));
     }
     if (argc == 2) {
-        GenServer(atoi(argv[1]));
+        s=server(atoi(argv[1]));
     }
     FILE *rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw -", "r");
     FILE *play_fp = popen("play -t raw -b 16 -c 1 -e s -r 48000 -", "w");
