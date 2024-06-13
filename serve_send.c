@@ -11,9 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include"VST/ringbuffer.h"
-#include"VST/flanger.h"
-#include"VST/input.h"
+#define SIZE 4096
 int server(int port){
  int ss;
     struct sockaddr_in addr;
@@ -79,13 +77,13 @@ int main(int argc, char *argv[]) {
     }
     // recから読み込んだデータをクライアントに送信
     while (1) {
-        short data;
-        if(fread(&data, sizeof(data),1, rec_fp)<=0){
+        short data[SIZE];
+        if(fread(&data, sizeof(short),SIZE,rec_fp)<=0){
             break;
         }
-        ssize_t send_data = send(s,&data, 2, 0);  // クライアントにデータを送信
-        ssize_t read_data = read(s,&data, 2);  // クライアントからデータを受信
-        fwrite(&data,sizeof(data),1, play_fp);
+        ssize_t send_data = send(s,&data, SIZE* sizeof(short), 0);  // クライアントにデータを送信
+        ssize_t read_data = read(s,&data, SIZE* sizeof(short));  // クライアントからデータを受信
+        fwrite(&data,sizeof(short),SIZE, play_fp);
         //write(1,&data, sizeof(data));  // recからデータを読み込む
     }
     pclose(rec_fp);
