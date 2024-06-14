@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
     if (argc == 2) {
         GenServer(atoi(argv[1]));
     }
-    Camera* camera=SetupCamera(Deg2Rad*3,120,60);
+    Camera* camera=SetupCamera(Deg2Rad*3,240,180);
     camera->pos.z=-1;
     //起動画面　
     StartMenu(camera);
