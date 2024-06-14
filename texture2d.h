@@ -8,7 +8,7 @@ typedef struct texture2d{
     int height;
     int* buffer;
 }Texture2D;
-Texture2D* Texture(int width,int height){
+Texture2D* gen_texture(int width,int height){
     Texture2D* self=(Texture2D*)malloc(sizeof(Texture2D));
     self->width=width;
     self->height=height;
@@ -18,10 +18,10 @@ Texture2D* Texture(int width,int height){
     }
     return self;
 }
-void Texture_SetPixel(Texture2D* self,int x,int y,int color){
+void texture_set_pixel(Texture2D* self,int x,int y,int color){
     self->buffer[self->width*y+x]=color;
 }
-int Texture_GetPixel(Texture2D self,Vector2 uv){
+int texture_get_pixel(Texture2D self,Vector2 uv){
     int x=uv.x*self.width;
     int y=uv.y*self.height;
     x=x>=0?x<self.width?x:self.width-1:0;

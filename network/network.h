@@ -13,7 +13,7 @@
 #include "filedata.h"
 #include "complex.h"
 #include "../fft.h"
-#define N SampleSize*4000/48000
+#define N SampleSize*4000/40000
 typedef struct 
 {
     char ip[256];
@@ -22,8 +22,6 @@ typedef struct
 
 void* server_thread(void* param){
     ThreadInfo info=*(ThreadInfo*)param;
-    FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw -", "r");
-    FILE* play_fp = popen("play -t raw -b 16 -c 1 -e s -r 48000 -", "w");
     int ss;
     struct sockaddr_in addr;
     ss = socket(PF_INET, SOCK_STREAM, 0);
@@ -55,6 +53,8 @@ void* server_thread(void* param){
         close(ss);
         exit(1);
     }
+    FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 40000 -t raw -", "r");
+    FILE* play_fp = popen("play -q -t raw -b 16 -c 1 -e s -r 40000 -", "w");
     FileData sentdata;
     FileData receiveddata;
     short recdata[SampleSize];
@@ -77,8 +77,6 @@ void* server_thread(void* param){
 }
 void* client_thread(void* param){
     ThreadInfo info=*(ThreadInfo*)param;
-    FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw -", "r");
-    FILE* play_fp = popen("play -t raw -b 16 -c 1 -e s -r 48000 -", "w");
     printf("%s:%d\n",info.ip,info.port);
     int s=socket(PF_INET,SOCK_STREAM,0);
     struct sockaddr_in addr;
@@ -89,6 +87,8 @@ void* client_thread(void* param){
     }
     addr.sin_port=htons(info.port);
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
+    FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 40000 -t raw -", "r");
+    FILE* play_fp = popen("play -q -t raw -b 16 -c 1 -e s -r 40000 -", "w");
     FileData sentdata;
     FileData receiveddata;
     short recdata[SampleSize];
@@ -98,7 +98,7 @@ void* client_thread(void* param){
     while(1){
         zero_clear(Z,SampleSize);
         if(fread(&recdata, sizeof(short),SampleSize,rec_fp)<=0){
-            break;
+            continue;
         }
         sample_to_complex(recdata,X, SampleSize);
         fft(X,Y,SampleSize);

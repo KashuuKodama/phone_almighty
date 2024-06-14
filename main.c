@@ -8,11 +8,18 @@
 #include "timer.h"
 #include "startmenu.h"
 #include "chatscene.h"
+#include "network/network.h"
 #define PI 3.14f
 #define Deg2Rad PI/180
 
-int main(){
+int main(int argc, char *argv[]){
 
+    if (argc == 3) {
+        GenClient(argv[1],atoi(argv[2]));
+    }
+    if (argc == 2) {
+        GenServer(atoi(argv[1]));
+    }
     Camera* camera=SetupCamera(Deg2Rad*3,120,60);
     camera->pos.z=-1;
     //起動画面　

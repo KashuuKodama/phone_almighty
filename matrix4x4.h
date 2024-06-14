@@ -27,7 +27,7 @@ typedef struct matrix4x4{
     float x32;
     float x33;
 }Matrix4x4;
-Matrix4x4 Matrix()
+Matrix4x4 matrix()
 {
     Matrix4x4 matrix;
     matrix.x00=0;
@@ -52,17 +52,17 @@ Matrix4x4 Matrix()
     return matrix;
 }
 //恒等変換
-Matrix4x4 Identity(){
-    Matrix4x4 matrix=Matrix();
-    matrix.x00=1;
-    matrix.x11=1;
-    matrix.x22=1;
-    matrix.x33=1;
-    return matrix;
+Matrix4x4 identity(){
+    Matrix4x4 _matrix=matrix();
+    _matrix.x00=1;
+    _matrix.x11=1;
+    _matrix.x22=1;
+    _matrix.x33=1;
+    return _matrix;
 }
 //平行移動変換
-Matrix4x4 Trnaslate(Vector3 pos){
-    Matrix4x4 matrix=Identity();
+Matrix4x4 translate(Vector3 pos){
+    Matrix4x4 matrix=identity();
     matrix.x00=1;
     matrix.x11=1;
     matrix.x22=1;
@@ -73,8 +73,8 @@ Matrix4x4 Trnaslate(Vector3 pos){
     return matrix;
 }
 //X周りの回転変換
-Matrix4x4 RotateX(float rotation){
-    Matrix4x4 matrix=Identity();
+Matrix4x4 rotate_x(float rotation){
+    Matrix4x4 matrix=identity();
     matrix.x11=cos(rotation);
     matrix.x12=sin(rotation);
     matrix.x21=-sin(rotation);
@@ -82,8 +82,8 @@ Matrix4x4 RotateX(float rotation){
     return matrix;
 }
 //Y周りの回転変換
-Matrix4x4 RotateY(float rotation){
-    Matrix4x4 matrix=Identity();
+Matrix4x4 rotate_y(float rotation){
+    Matrix4x4 matrix=identity();
     matrix.x00=cos(rotation);
     matrix.x02=-sin(rotation);
     matrix.x20=sin(rotation);
@@ -91,8 +91,8 @@ Matrix4x4 RotateY(float rotation){
     return matrix;
 }
 //Z周りの回転変換
-Matrix4x4 RotateZ(float rotation){
-    Matrix4x4 matrix=Identity();
+Matrix4x4 rotate_z(float rotation){
+    Matrix4x4 matrix=identity();
     matrix.x00=cos(rotation);
     matrix.x01=sin(rotation);
     matrix.x10=-sin(rotation);
@@ -100,8 +100,8 @@ Matrix4x4 RotateZ(float rotation){
     return matrix;
 }
 //スケール変換
-Matrix4x4 Scale(Vector3 scale){
-    Matrix4x4 matrix=Identity();
+Matrix4x4 scale(Vector3 scale){
+    Matrix4x4 matrix=identity();
     matrix.x00=scale.x;
     matrix.x11=scale.y;
     matrix.x22=scale.z;
@@ -109,14 +109,14 @@ Matrix4x4 Scale(Vector3 scale){
     return matrix;
 }
 //行列とベクトルの積
-Vector3 Mul_Vec(Matrix4x4 m,Vector3 v){
+Vector3 mul_vec(Matrix4x4 m,Vector3 v){
     float x=v.x*m.x00+v.y*m.x01+v.z*m.x02+m.x03;
     float y=v.x*m.x10+v.y*m.x11+v.z*m.x12+m.x13;
     float z=v.x*m.x20+v.y*m.x21+v.z*m.x22+m.x23;
-    return Vec3(x,y,z);
+    return vec3(x,y,z);
 }
 //行列と行列の積
-Matrix4x4 Mul_Matrix(Matrix4x4 m0,Matrix4x4 m1){
+Matrix4x4 mul_matrix(Matrix4x4 m0,Matrix4x4 m1){
    Matrix4x4 m;
    m.x00=m0.x00*m1.x00+m0.x01*m1.x10+m0.x02*m1.x20+m0.x03*m1.x30;
    m.x10=m0.x10*m1.x00+m0.x11*m1.x10+m0.x12*m1.x20+m0.x13*m1.x30;
@@ -142,15 +142,15 @@ Matrix4x4 Mul_Matrix(Matrix4x4 m0,Matrix4x4 m1){
 }
 
 //回転変換
-Matrix4x4 Euler(Vector3 euler){
-    return Mul_Matrix(RotateX(euler.x),Mul_Matrix(RotateY(euler.y),RotateZ(euler.z)));
+Matrix4x4 euler(Vector3 euler){
+    return mul_matrix(rotate_x(euler.x),mul_matrix(rotate_y(euler.y),rotate_z(euler.z)));
 }
 //逆回転変換
-Matrix4x4 InverseEuler(Vector3 euler){
-    return Mul_Matrix(RotateZ(-euler.z),Mul_Matrix(RotateY(-euler.y),RotateX(-euler.x)));
+Matrix4x4 inverse_euler(Vector3 euler){
+    return mul_matrix(rotate_z(-euler.z),mul_matrix(rotate_y(-euler.y),rotate_x(-euler.x)));
 }
 //トランスフォーム変換
-Matrix4x4 TRS(Vector3 pos,Vector3 euler,Vector3 scale){
-    return Mul_Matrix(Trnaslate(pos),Mul_Matrix(Euler(euler),Scale(scale)));
+Matrix4x4 trs(Vector3 pos,Vector3 _euler,Vector3 _scale){
+    return mul_matrix(translate(pos),mul_matrix(euler(_euler),scale(_scale)));
 }
 #endif
