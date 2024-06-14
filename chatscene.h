@@ -8,12 +8,11 @@
 #include "textures.h"
 #include "timer.h"
 #include "math.h"
-#include "physics.h"
 #ifdef CHATSCENE_H
 #else
 #define CHATSCENE_H
 void ChatScene(Camera* camera){
-    camera->pos=Vec3(0,0,-1);
+    camera->pos=vec3(0,0,-1);
     while (1)
     {
         UpdateTime();
