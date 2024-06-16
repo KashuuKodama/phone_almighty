@@ -8,6 +8,7 @@
 #include "timer.h"
 #include "startmenu.h"
 #include "chatscene.h"
+#include "roomsscene.h"
 #include "network/network.h"
 #define PI 3.14f
 #define Deg2Rad PI/180
@@ -24,6 +25,7 @@ int main(int argc, char *argv[]){
     camera->pos.z=-1;
     //起動画面　
     StartMenu(camera);
+    RoomsScene(camera);
     //ゲーム画面
     ChatScene(camera);
     

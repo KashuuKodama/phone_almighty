@@ -24,7 +24,7 @@ Texture2D* open_texture(char* path){
     int x=0;
     int y=0;
     fscanf(fp,"x=%d y=%d",&x,&y);
-    Texture2D* texture=gen_texture(x,y);
+    Texture2D* texture=gen_texture(y,x);
     for(int i=0;i<y;i++){
         char line[1000];
         fscanf(fp,"%s",line);
@@ -33,7 +33,7 @@ Texture2D* open_texture(char* path){
             if(p!=NULL){
                 char *e;
                 long v = strtol(p,&e, 10);
-                texture_set_pixel(texture,i,j,v);
+                texture_set_pixel(texture,y-1-i,j,v);
             }
             p=strtok(NULL,",");
         }

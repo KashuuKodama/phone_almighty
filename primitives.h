@@ -14,10 +14,10 @@ Model3D* plane(){
         return model;
     }
     model=gen_model();
-    add_vertex(model,vec3(-0.5f,-0.5f,-0.5f));
-    add_vertex(model,vec3(0.5f,-0.5f,-0.5f));
-    add_vertex(model,vec3(0.5f,0.5f,-0.5f));
-    add_vertex(model,vec3(-0.5f,0.5f,-0.5f));
+    add_vertex(model,vec3(-0.5f,-0.5f,0));
+    add_vertex(model,vec3(0.5f,-0.5f,0));
+    add_vertex(model,vec3(0.5f,0.5f,0));
+    add_vertex(model,vec3(-0.5f,0.5f,0));
     add_uv(model,vec2(0,0));
     add_uv(model,vec2(0,1));
     add_uv(model,vec2(1,1));

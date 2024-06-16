@@ -26,7 +26,7 @@ typedef struct camera{
     Vector3 euler;
     Vector3 size; 
     int* buffer;
-    float* depthbuffer;
+    double* depthbuffer;
 }Camera;
 
 //カメラの設定をする
@@ -35,7 +35,7 @@ Camera* SetupCamera(float pov,int width,int height){
     camera->pov=pov;
     camera->size=vec3(width,height,0);
     camera->buffer=(int*)malloc(sizeof(int)*width*height);
-    camera->depthbuffer=(float*)malloc(sizeof(float)*width*height);
+    camera->depthbuffer=(double*)malloc(sizeof(double)*width*height);
     return camera;
 }
 //メモリを解放する
@@ -52,7 +52,7 @@ Vector3 world_to_screen_pos(Camera* self,Vector3 wpos)
 void set_pixel(Camera* self,Vector3 v0,int color){
     if(color==0||v0.z<0)return;
     int x=(int)v0.x;
-    int y=(int)((self->size.y-v0.y)*CHAR_ASPECT);
+    int y=(int)(self->size.y-v0.y*CHAR_ASPECT);
     if(0<=x &&x<self->size.x&&0<=y&&y<self->size.y)
     {
         //Culling処理
@@ -64,15 +64,17 @@ void set_pixel(Camera* self,Vector3 v0,int color){
 }
 //2D3角形を描画する
 void draw_2d_triangle(Camera* self,Vector3 v0,Vector3 v1,Vector3 v2,Vector2 uv0,Vector2 uv1,Vector2 uv2,Texture2D texture,float color_multiplier){
-    v0=vec3_add(v0,vec3_mul(0.5f,self->size));
-    v1=vec3_add(v1,vec3_mul(0.5f,self->size));
-    v2=vec3_add(v2,vec3_mul(0.5f,self->size));
+    Vector3 size=self->size;
+    size.y*=2;
+    v0=vec3_add(v0,vec3_mul(0.5f,size));
+    v1=vec3_add(v1,vec3_mul(0.5f,size));
+    v2=vec3_add(v2,vec3_mul(0.5f,size));
     int minx=MIN(v0.x,MIN(v1.x,v2.x));
     int miny=MIN(v0.y,MIN(v1.y,v2.y));
     int maxx=MAX(v0.x,MAX(v1.x,v2.x));
     int maxy=MAX(v0.y,MAX(v1.y,v2.y));
-    for(int x=MAX(0,minx);x<=MIN(self->size.x,maxx);x++){
-        for(int y=MAX(-self->size.y,miny);y<=MIN(self->size.y,maxy);y++){
+    for(int x=MAX(0,minx);x<MIN(size.x,maxx);x++){
+        for(int y=MAX(0,miny);y<MIN(size.y,maxy);y++){
             Vector3 point=vec3(x,y,0);
             Vector3 d0=vec3_add(v1,vec3_mul(-1,v0));
             Vector3 d1=vec3_add(v2,vec3_mul(-1,v1));
@@ -83,7 +85,7 @@ void draw_2d_triangle(Camera* self,Vector3 v0,Vector3 v1,Vector3 v2,Vector2 uv0,
             float total=dot0+dot1+dot2;
             if((dot0<=0 && dot1<=0 && dot2<=0 )||(dot0>=0 && dot1>=0 && dot2>=0)){
                 Vector2 texcoord=vec2_add(vec2_add(vec2_mul(dot0/total,uv2),vec2_mul(dot1/total,uv0)),vec2_mul(dot2/total,uv1));
-                point.z=(dot0/total)*v2.z+(dot1/total)*v0.z+(dot2/total)*v1.z;
+                point.z=v2.z*(dot0/total)+v0.z*(dot1/total)+v1.z*(dot2/total);
                 set_pixel(self,point,texture_get_pixel(texture,texcoord)*color_multiplier);
             }
         }
@@ -152,14 +154,18 @@ void BeginCamera(Camera* self){
         }
     }
 }
-char swapbuffer[600000];
+char swapbuffer[1000000];
 //描画を終了する
 void EndCamera(Camera* self){
     int swapbufferindex=0;
+    int tmpcolor=0;
     for(int i=0;i<self->size.y;i++){
         for(int j=0;j<self->size.x;j++){
             if(self->buffer[i*(int)self->size.x+j]){
-                swapbufferindex +=sprintf(&swapbuffer[swapbufferindex],"\x1b[38;5;%dm●\x1b[0m",self->buffer[i*(int)self->size.x+j]);
+                if(self->buffer[i*(int)self->size.x+j]!=tmpcolor){
+                    swapbufferindex +=sprintf(&swapbuffer[swapbufferindex],"\x1b[0m");
+                }
+                swapbufferindex +=sprintf(&swapbuffer[swapbufferindex],"\x1b[38;5;%dm●",self->buffer[i*(int)self->size.x+j]);
             }
             else{
                 swapbufferindex +=sprintf(&swapbuffer[swapbufferindex]," ");
