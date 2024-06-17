@@ -126,10 +126,10 @@ void ChatScene(Camera* camera){
     Texture2D* icon1=open_texture("textures/rooms/icon4.txt");
     Texture2D* phone=open_texture("textures/phone.txt");
     Model3D* circle=open_obj("models/circle.obj");
-    char message[MAX_MESSAGE_LENGTH];
-    MessageData messages[MAX_MESSAGE_COUNT];
+    
     while (1)
     {
+        char message[MAX_MESSAGE_LENGTH];
         UpdateTime();
         float time=GetTime();
         BeginCamera(camera);
