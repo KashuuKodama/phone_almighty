@@ -23,6 +23,13 @@ int main(int argc, char *argv[]){
     }
     Camera* camera=SetupCamera(Deg2Rad*3,240,180);
     camera->pos.z=-1;
+    /*
+    while(1){
+        char c=getkey();
+        if(c!=0)
+        printf("%d\n",c);
+    }
+    */
     //起動画面　
     StartMenu(camera);
     RoomsScene(camera);

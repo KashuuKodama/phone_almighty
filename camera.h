@@ -74,7 +74,7 @@ void draw_2d_triangle(Camera* self,Vector3 v0,Vector3 v1,Vector3 v2,Vector2 uv0,
     int maxx=MAX(v0.x,MAX(v1.x,v2.x));
     int maxy=MAX(v0.y,MAX(v1.y,v2.y));
     for(int x=MAX(0,minx);x<MIN(size.x,maxx);x++){
-        for(int y=MAX(0,miny);y<MIN(size.y,maxy);y++){
+        for(int y=MAX(0,miny),drew=0;y<MIN(size.y,maxy);y++){
             Vector3 point=vec3(x,y,0);
             Vector3 d0=vec3_add(v1,vec3_mul(-1,v0));
             Vector3 d1=vec3_add(v2,vec3_mul(-1,v1));
@@ -87,6 +87,10 @@ void draw_2d_triangle(Camera* self,Vector3 v0,Vector3 v1,Vector3 v2,Vector2 uv0,
                 Vector2 texcoord=vec2_add(vec2_add(vec2_mul(dot0/total,uv2),vec2_mul(dot1/total,uv0)),vec2_mul(dot2/total,uv1));
                 point.z=v2.z*(dot0/total)+v0.z*(dot1/total)+v1.z*(dot2/total);
                 set_pixel(self,point,texture_get_pixel(texture,texcoord)*color_multiplier);
+                drew=1;
+            }
+            else if(drew==1){
+                break;
             }
         }
     }
@@ -162,10 +166,13 @@ void EndCamera(Camera* self){
     for(int i=0;i<self->size.y;i++){
         for(int j=0;j<self->size.x;j++){
             if(self->buffer[i*(int)self->size.x+j]){
-                if(self->buffer[i*(int)self->size.x+j]!=tmpcolor){
-                    swapbufferindex +=sprintf(&swapbuffer[swapbufferindex],"\x1b[0m");
+                if(self->buffer[i*(int)self->size.x+j]==tmpcolor){
+                    swapbufferindex +=sprintf(&swapbuffer[swapbufferindex],"●");
                 }
-                swapbufferindex +=sprintf(&swapbuffer[swapbufferindex],"\x1b[38;5;%dm●",self->buffer[i*(int)self->size.x+j]);
+                else{
+                    swapbufferindex +=sprintf(&swapbuffer[swapbufferindex],"\x1b[0m");
+                    swapbufferindex +=sprintf(&swapbuffer[swapbufferindex],"\x1b[38;5;%dm●",(tmpcolor=self->buffer[i*(int)self->size.x+j]));
+                }
             }
             else{
                 swapbufferindex +=sprintf(&swapbuffer[swapbufferindex]," ");

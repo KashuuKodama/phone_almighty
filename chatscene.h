@@ -7,6 +7,8 @@
 #include "primitives.h"
 #include "textures.h"
 #include "timer.h"
+#include "roomdata.h"
+#include "messagedata.h"
 #include "math.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +19,7 @@
 #define PI 3.14f
 #define Deg2Rad PI/180
 #define MAX_MESSAGE_LINE_LENGTH 15
+#define MAX_MESSAGE_LENGTH 30
 #define MAX_STAMPS_COUNT 30
 float textbox_left(Camera* camera,Texture2D icon,char* text,float y){
     static Model3D text_half;
@@ -51,10 +54,10 @@ float textbox_left(Camera* camera,Texture2D icon,char* text,float y){
             }
         }
         int id=atoi(&text[1]);
-        float width=2;
-        float height=(float)stamps[id].height/stamps[id].width*2;
+        float width=3;
+        float height=(float)stamps[id].height/stamps[id].width*width;
         draw_3d_model(camera,circle,trs(vec3(-4+0.1f,y-height/2-0.3f,5),vec3(Deg2Rad*-90,0,0),vec3(0.6,0.6,0.6)),icon,1);
-        draw_3d_model(camera,text_plane,trs(vec3(-2.5+width/2-0.3f,y-height/2-0.3f,5),vec3(Deg2Rad*90,Deg2Rad*90,0),vec3(height/2,1,width/2)),stamps[id],1);
+        draw_3d_model(camera,text_plane,trs(vec3(-2.5+width/2-0.3f,y-height/2-0.3f,5),vec3(Deg2Rad*90,Deg2Rad*90,0),vec3(width/2,1,height/2)),stamps[id],1);
         return height+0.6f;
     }
     //text
@@ -99,9 +102,9 @@ float textbox_right(Camera* camera,char* text,float y){
             }
         }
         int id=atoi(&text[1]);
-        float width=2;
-        float height=(float)stamps[id].height/stamps[id].width*2;
-        draw_3d_model(camera,text_plane,trs(vec3(4-width/2-0.3f,y-height/2-0.3f,5),vec3(Deg2Rad*90,Deg2Rad*90,0),vec3(height/2,1,width/2)),stamps[id],1);
+        float width=3;
+        float height=(float)stamps[id].height/stamps[id].width*width;
+        draw_3d_model(camera,text_plane,trs(vec3(4-width/2-0.3f,y-height/2-0.3f,5),vec3(Deg2Rad*90,Deg2Rad*90,0),vec3(width/2,1,height/2)),stamps[id],1);
         return height+0.6f;
     }
     //text
@@ -123,6 +126,8 @@ void ChatScene(Camera* camera){
     Texture2D* icon1=open_texture("textures/rooms/icon4.txt");
     Texture2D* phone=open_texture("textures/phone.txt");
     Model3D* circle=open_obj("models/circle.obj");
+    char message[MAX_MESSAGE_LENGTH];
+    MessageData messages[MAX_MESSAGE_COUNT];
     while (1)
     {
         UpdateTime();
@@ -155,13 +160,23 @@ void ChatScene(Camera* camera){
         y-=textbox_left(camera,*icon1,"yeah hello",y);
         y-=textbox_right(camera,"hello",y);
         y-=textbox_right(camera,"_0",y);
-        y-=textbox_left(camera,*icon1,"_2",y);
-        char key=getkey();
-        //次の画面に移るときにbreak
-        if(key=='a'){
-            break;
-        }
+        y-=textbox_left(camera,*icon1,"_3",y);
+        draw_3d_model(camera,*plane(),trs(vec3(0,-5,4),vec3(0,0,0),vec3(9,2,1)),*gen_colortexture(255),1);
+        draw_3d_text(camera,">",0,trs(vec3(-3,-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
+        draw_3d_text(camera,message,0,trs(vec3(0,-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
         EndCamera(camera);
+        char key=getkey();
+        if(('a'<=key&&key<='z')||('A'<=key&&key<='Z')||key==' '){
+            sprintf(message,"%s%c",message,key);
+        }
+        //backspace
+        else if(key==127||key==8){
+            sprintf(message,"%ss",message);
+        }
+        //enter
+        else if(key==10){
+            sprintf(message,"%ss",message);
+        }
     }
     
 }
