@@ -46,6 +46,12 @@ Texture2D* gen_alphabettexture(char c){
     if(c==' '){
         sprintf(path,"font/ .txt");
     }
+    if(c=='>'){
+        sprintf(path,"font/>.txt");
+    }
+    if(c=='<'){
+        sprintf(path,"font/<.txt");
+    }
     if('a'<=c && c<='z'){
         sprintf(path,"font/%c.txt",c);
     }
