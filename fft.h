@@ -78,7 +78,7 @@ void complex_to_sample(complex double * X,
 /* 複素数型の配列を0埋めする */
 void zero_clear(complex double * X, long n) {
   long i;
-  for (i = 0; i < n; i++) X[i] = 0.0;
+  for (i = 0; i < n; i++) X[i] = 0.0 + 0.0 * I;
 }
 
 /* 高速(逆)フーリエ変換;
