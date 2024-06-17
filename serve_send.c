@@ -89,6 +89,7 @@ int main(int argc, char *argv[]) {
 
     // 標準入力から取り込んだデータ
     complex double * X = calloc(sizeof(complex double), SIZE);
+    complex double * X_canceled = calloc(sizeof(complex double), SIZE);
     // 標準出力から出力したデータ
     complex double * L = calloc(sizeof(complex double), SIZE);  // エコーキャンセル時に用いる
     // スペクトル通信用
@@ -111,9 +112,9 @@ int main(int argc, char *argv[]) {
         /* XをLを用いてエコーキャンセル*/
         estimate_echo(filter, L, estimated_echo, SIZE);
         for (int i = 0; i < SIZE; i++) {
-            X[i] -= estimated_echo[i];
+            X_canceled[i] = X[i] - estimated_echo[i];
         }
-        update_filter(filter, Z, X, SIZE);
+        update_filter(filter, X, X_canceled, SIZE);
 
         fft(X,Y,SIZE);
 

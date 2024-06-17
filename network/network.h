@@ -20,6 +20,12 @@ typedef struct
     int port;
 }ThreadInfo;
 
+/*  サーバーを立ててクライアントとやりとりする
+    -   (今はやらない)サーバーのポート番号は、指定された個数だけ、htons(0)によりランダムに割り当て、getsocknameで取得して、(共通の)配列に格納する
+    -   複数のクライアントと同時にやりとりできるように、各クライアント用の個別のスレッドを立てる
+    -   全てのクライアントから受け取ったスペクトルデータを線形結合して再生するとともに、録音データのスペクトルと線形結合して全てのクライアントに送信する
+    -   線形結合を取るために、共通のスペクトル用の配列を用意し、mutexを用いて排他制御しつつ、並列に上書きしていく
+ */
 void* server_thread(void* param){
     ThreadInfo info=*(ThreadInfo*)param;
     int ss;
@@ -75,6 +81,8 @@ void* server_thread(void* param){
         fwrite(recdata,sizeof(short),SampleSize, play_fp);
     }
 }
+
+/* param で指定したポート番号にコネクトしてサーバーと通信する(他のクライアントともサーバーを通じて通信する) */
 void* client_thread(void* param){
     ThreadInfo info=*(ThreadInfo*)param;
     printf("%s:%d\n",info.ip,info.port);
@@ -109,6 +117,8 @@ void* client_thread(void* param){
         fwrite(recdata,sizeof(short),SampleSize, play_fp);
     }
 }
+
+/* サーバースレッドを立てる関数(サーバーを立てているわけではない; UIとの並列処理用) */
 void GenServer(int port){
     pthread_t thread;
     ThreadInfo info;
@@ -121,6 +131,8 @@ void GenServer(int port){
     }
     printf("server thread created\n");
 }
+
+/* クライアントスレッドを立てる関数(サーバーにコネクトしているわけではない; UIとの並列処理用) */
 void GenClient(char* ip,int port){
     pthread_t thread;
     ThreadInfo info;

@@ -12,12 +12,15 @@
 #include <string.h>
 #include <unistd.h>
 #include "pthread.h"
-#include "network/network.h"
+// #include "network/network.h"
+#include "network/network2.h"
 int main(int argc, char *argv[]) {
     if (argc == 3) {
-        GenClient(argv[1],atoi(argv[2]));
+        // GenClient(argv[1],atoi(argv[2]));
+        GenClient(argv[1], atoi(argv[2]));
     }
     if (argc == 2) {
+        // GenServer(atoi(argv[1]));
         GenServer(atoi(argv[1]));
     }
     while (1) {
