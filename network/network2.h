@@ -14,6 +14,9 @@
 #include "complex.h"
 #include "../echo_cancel.h"
 #include "../fft.h"
+#ifdef NETWORK2_H
+#else
+#define NETWORK2_H
 #define N SampleSize*4000/48000
 
 pthread_mutex_t mutex;
@@ -22,6 +25,7 @@ typedef struct
 {
     char ip[256];
     int port;
+
 }ThreadInfo;
 
 // グローバルなスペクトルデータ
@@ -42,18 +46,23 @@ complex double global_spectrum[N];
 void* toclient_thread(void* param){
     int client_s=*(int*)param;
     complex double recv_spectrum[N],old_spectrum[N],back_spectrum[N];
+    zero_clear(recv_spectrum,N);
+    zero_clear(old_spectrum,N);
+    zero_clear(back_spectrum,N);
     while(1){
         int read_size=read(client_s,recv_spectrum,sizeof(complex double)*N);
-        if(read_size==0)break;
+        if(read_size<=0)continue;;
         // global_spectrumをロックする
-        pthread_mutex_lock(&mutex);
+        //pthread_mutex_lock(&mutex);
+        print_complex(stdout,global_spectrum,N);
+
         for(int i=0;i<N;i++){
             global_spectrum[i]= global_spectrum[i] + recv_spectrum[i];
             global_spectrum[i]= global_spectrum[i] - old_spectrum[i];
             back_spectrum[i]= global_spectrum[i] - recv_spectrum[i];
         }
         // global_spectrumをアンロックする
-        pthread_mutex_unlock(&mutex);
+        //pthread_mutex_unlock(&mutex);
         // send
         write(client_s,back_spectrum,sizeof(complex double)*N);
         for(int i=0;i<N;i++){
@@ -73,7 +82,7 @@ void* toclient_thread(void* param){
 //   スレッドを終了する
 // 実装例
 void* server_thread(void* param){
-    pthread_mutex_init(&mutex,NULL);
+    //pthread_mutex_init(&mutex,NULL);
     ThreadInfo info=*(ThreadInfo*)param;
     int ss;                                 // バインド・リッスン用のソケット
     struct sockaddr_in addr;
@@ -104,7 +113,6 @@ void* server_thread(void* param){
         int client_s = accept(ss, (struct sockaddr *)&client_addr, &len_client);
         pthread_t thread;
         pthread_create(&thread,NULL,toclient_thread,&client_s);
-        pthread_join(thread,NULL);
     }
     close(ss);
     pthread_exit(NULL);
@@ -148,8 +156,8 @@ void* client_thread(void* param){
     // データ
     complex double * X = calloc(sizeof(complex double), SampleSize);
     complex double * X_canceled = calloc(sizeof(complex double), SampleSize);
-    complex double * Y = calloc(sizeof(complex double), N);
-    complex double * Z = calloc(sizeof(complex double), N);  // 受け取り用(0埋めしておく)
+    complex double * Y = calloc(sizeof(complex double), SampleSize);
+    complex double * Z = calloc(sizeof(complex double), SampleSize);  // 受け取り用(0埋めしておく)
     complex double * L = calloc(sizeof(complex double), SampleSize);  // エコーキャンセル時に用いる
     // エコーキャンセル用
     complex double filter[FILTER_LENGTH];
@@ -158,9 +166,9 @@ void* client_thread(void* param){
 
     while(1){
         short data[SampleSize];
-        zero_clear(Z, N);
+        zero_clear(Z, SampleSize);
         if(fread(data,sizeof(short),SampleSize,rec_fp)<=0){
-            break;
+            continue;
         }
         sample_to_complex(data,X, SampleSize);
 
@@ -182,6 +190,7 @@ void* client_thread(void* param){
         ssize_t read_data = read(s,Z,N* sizeof(complex double));
         ifft(Z,L,SampleSize);
         complex_to_sample(L,data,SampleSize);
+        print_complex(stdout,Z,N);
         fwrite(data,sizeof(short),SampleSize, play_fp);
     }
     close(s);
@@ -217,5 +226,5 @@ void GenClient(const char* ip, int port){
     info.port=port;
     // クライアントスレッドを立てる
     pthread_create(&thread,NULL,client_thread,&info);
-    pthread_join(thread,NULL);
 }
+#endif

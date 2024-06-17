@@ -13,15 +13,14 @@
 #include <unistd.h>
 #include "pthread.h"
 // #include "network/network.h"
-#include "network/network2.h"
+#include "network/network3.h"
 int main(int argc, char *argv[]) {
-    if (argc == 3) {
-        // GenClient(argv[1],atoi(argv[2]));
-        GenClient(argv[1], atoi(argv[2]));
+    if (argc == 4) {
+        GenClient(argv[1], atoi(argv[2]),atoi(argv[3]));
     }
-    if (argc == 2) {
+    if (argc == 3) {
         // GenServer(atoi(argv[1]));
-        GenServer(atoi(argv[1]));
+        GenServer(atoi(argv[1]),atoi(argv[2]));
     }
     while (1) {
     }
