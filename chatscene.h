@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "network/dbdata.h"
+#include "callscene.h"
 #ifdef CHATSCENE_H
 #else
 #define CHATSCENE_H
@@ -119,7 +121,7 @@ float textbox_right(Camera* camera,char* text,float y){
     }
     return 0;
 }
-void ChatScene(Camera* camera,RoomData* room,char* user){
+void ChatScene(Camera* camera,DBData* db,char* user){
     camera->pos=vec3(0,0,-1);
     Texture2D* back=open_texture("textures/back.txt");
     Texture2D* icon=open_texture("textures/rooms/icon0.txt");
@@ -127,6 +129,8 @@ void ChatScene(Camera* camera,RoomData* room,char* user){
     Texture2D* phone=open_texture("textures/phone.txt");
     Model3D* circle=open_obj("models/circle.obj");
     float offset=0;
+    float front=0;
+    RoomData* room=db->rooms;
     while (1)
     {
         UpdateTime();
@@ -159,6 +163,7 @@ void ChatScene(Camera* camera,RoomData* room,char* user){
                 memmove(room->messages,room->messages+1,room->length*sizeof(MessageData));
             }
             room->length= room->length+1;
+            offset=front;
             strcpy(room->messages[room->length-1].text,input_text);
             strcpy(room->messages[room->length-1].user,user);
             strcpy(input_text,"");
@@ -167,16 +172,16 @@ void ChatScene(Camera* camera,RoomData* room,char* user){
         if(n==3&&keys[0]==27&&keys[1]==91){
             switch(keys[2]){
                 case 65:
-                    offset-=0.3f;
+                    offset-=0.6f;
                 break;
                 case 67:
-                    //sprintf(message,"right");
+                    CallScene(camera,db,user);
                 break;
                 case 66:
-                    offset+=0.3f;
+                    offset+=0.6f;
                 break;
                 case 68:
-                    //sprintf(message,"left");
+                    //CallScene(camera,db,user);
                 break;
             }
         }
@@ -213,7 +218,7 @@ void ChatScene(Camera* camera,RoomData* room,char* user){
                 y-=textbox_left(camera,*icon1,message.text,y);
             }
         }
-
+        front=offset-y;
         draw_3d_model(camera,*plane(),trs(vec3(0,-5,4),vec3(0,0,0),vec3(9,2,1)),*gen_colortexture(255),1);
         draw_3d_text(camera,">",0,trs(vec3(-3.4,-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
         draw_3d_model(camera,*plane(),trs(vec3(-3+0.4f*strlen(input_text),-4.75,3.9),vec3(0,0,0),vec3(0.4*(fmod(time,1)<0.5?1:0),0.1,0.5)),*gen_colortexture(16),1);

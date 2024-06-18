@@ -10,6 +10,7 @@
 #include "chatscene.h"
 #include "roomsscene.h"
 #include "network/network.h"
+#include "network/dbdata.h"
 #define PI 3.14f
 #define Deg2Rad PI/180
 
@@ -36,23 +37,22 @@ int main(int argc, char *argv[]){
     StartMenu(camera);
     RoomsScene(camera);
     //ゲーム画面
-    RoomData room;
-    room.length=4;
+    DBData db;
+    db.rooms->length=4;
     MessageData message;
     strcpy(message.text,"hello");
     strcpy(message.user,"kashuu");
-    room.messages[0]=message;
+    db.rooms->messages[0]=message;
     strcpy(message.text,"hello ooo");
     strcpy(message.user,"yuri");
-    room.messages[1]=message;
+    db.rooms->messages[1]=message;
     strcpy(message.text,"_0");
     strcpy(message.user,"kashuu");
-    room.messages[2]=message;
+    db.rooms->messages[2]=message;
      strcpy(message.text,"_3");
     strcpy(message.user,"yuri");
-    room.messages[3]=message;
-    ChatScene(camera,&room,"kashuu");
-    
+    db.rooms->messages[3]=message;
+    ChatScene(camera,&db,"kashuu");
     FreeCamera(camera);
     free(camera);
 }
