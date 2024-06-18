@@ -18,13 +18,14 @@
 #else
 #define NETWORK3_H
 #define N (SampleSize*8000/48000)
-#define MAX_USER_COUNT 10
 typedef struct 
 {
     char ip[256];
     int port;
     void* custom0;
     void* custom1;
+    void* custom2;
+    int* status;
 }ThreadInfo;
 
 void *toclient_audio_thread(void *param)
@@ -32,23 +33,38 @@ void *toclient_audio_thread(void *param)
     ThreadInfo info=*(ThreadInfo*)param;
     int* sockets=(int *)info.custom0;
     int* user_count=(int *)info.custom1;
+    DBData* db=(DBData*)info.custom2;
     complex double global_spectrum[N];
     complex double spectrums[MAX_USER_COUNT][N];
     while(1){
         zero_clear(global_spectrum,N);
+        /* データの受け取り(接続していないクライアントも含めて) */
         for(int i=0;i<*user_count;i++){
             int read_size=read(sockets[i],spectrums[i],sizeof(complex double)*N);
-            if(read_size<=0)continue;
+            printf("r\n");
+            /* データを受け取っていない場合、サーバ側ではミュートの扱いにする */
+            if(read_size<=0){
+                db->statuses[i]=1;
+                printf("user %d is muted\n",i);
+                continue;
+            }
+            db->statuses[i]=0;      // データを受け取ったらステータスを0(アンミュート)にする
             for(int j=0;j<N;j++){
                 global_spectrum[j]+=spectrums[i][j];
             }
             
         }
+        /* データの送信 */
         for(int i=0;i<*user_count;i++){
             for(int j=0;j<N;j++){
                 spectrums[i][j]=global_spectrum[j]-spectrums[i][j];
             }
+            // printf("w\n");
+            if (db->statuses[i]==1){
+                continue;
+            }
             write(sockets[i],spectrums[i],sizeof(complex double)*N);
+            printf("w\n");
         }
     }
 }
@@ -91,6 +107,7 @@ void *server_audio_thread(void *param)
     ThreadInfo client_audio_thread_info;
     client_audio_thread_info.custom0=sockets;
     client_audio_thread_info.custom1=&user_count;
+    client_audio_thread_info.custom2=info.custom0;
     pthread_t thread;
     pthread_create(&thread,NULL,toclient_audio_thread,&client_audio_thread_info);
     while (1)
@@ -106,6 +123,7 @@ void *server_audio_thread(void *param)
 void *server_db_thread(void *param)
 {
     ThreadInfo info=*(ThreadInfo*)param;
+    DBData * db = (DBData*)info.custom0;
     int ss;
     struct sockaddr_in addr;
     ss = socket(PF_INET, SOCK_STREAM, 0);
@@ -159,21 +177,50 @@ void *client_audio_thread(void *param)
     addr.sin_port=htons(info.port);
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
 
+    /* ミュート, アンミュートのステート(ブール型) */
+    int * mute = info.status;   // 0: unmute, 1: mute
+
     complex double * X = calloc(sizeof(complex double), SampleSize);
+    complex double * X_canceled = calloc(sizeof(complex double), SampleSize);
     complex double * Y = calloc(sizeof(complex double), SampleSize);
+    complex double * L = calloc(sizeof(complex double), SampleSize);  // エコーキャンセル時に用いる
+    /* エコーキャンセル用 */
+    complex double filter[FILTER_LENGTH];
+    complex double estimated_echo[SampleSize];
+    init_filter(filter, FILTER_LENGTH);
+    /* データ送受信フラグ　*/
+    ssize_t send_data, read_data;
 
     while(1){
         short data[SampleSize];
-        //zero_clear(Z, SampleSize);
+
+        /* データが届いていないもしくはミュートの場合は音を収録しない */
         if(fread(data,sizeof(short),SampleSize,rec_fp)<=0){
             continue;
+        } else if (*mute == 0) {
+            sample_to_complex(data,X, SampleSize);
+
+            /* エコーキャンセル */
+            // estimate_echo(filter,X,estimated_echo,SampleSize);
+            // for(int i=0;i<SampleSize;i++){
+            //     X_canceled[i] =  X[i] - estimated_echo[i];
+            // }
+            // update_filter(filter,X,X_canceled,SampleSize);
+            /* エコーキャンセルしない場合 */
+            for (int i=0; i<SampleSize;i++){
+                X_canceled[i] = X[i];
+            }
+
+            // fft(X,Y,SampleSize);
+            fft(X_canceled,Y,SampleSize);
+            send_data = write(s,Y,N* sizeof(complex double));
         }
-        sample_to_complex(data,X, SampleSize);
-        fft(X,Y,SampleSize);
-        ssize_t send_data = write(s,Y,N* sizeof(complex double));
-        ssize_t read_data = read(s,Y,N* sizeof(complex double));
-        ifft(Y,X,SampleSize);
-        complex_to_sample(X,data,SampleSize);
+        read_data = read(s,Y,N* sizeof(complex double));
+
+        // ifft(Y,X,SampleSize);
+        // complex_to_sample(X,data,SampleSize);
+        ifft(Y,L,SampleSize);
+        complex_to_sample(L,data,SampleSize);
         fwrite(data,sizeof(short),SampleSize, play_fp);
     }
 }
@@ -191,16 +238,14 @@ void *client_db_thread(void *param)
     addr.sin_port=htons(info.port);
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
     while(1){
-        char text[10];
-        int n=read(s,text,10);
-        if(n>0)
-        printf("%s\n",text);
     }
 }
 void GenServer(int audio_port,int db_port){
     ThreadInfo info;
-    complex double spectrums[MAX_USER_COUNT][SampleSize];
-    info.custom0=spectrums;
+    DBData* db=(DBData*)malloc(sizeof(DBData));
+    // complex double spectrums[MAX_USER_COUNT][SampleSize];
+    // info.custom0=spectrums;
+    info.custom0=db;
     strcpy(info.ip,"0.0.0.0");
     info.port=audio_port;
     pthread_t thread;
@@ -209,15 +254,17 @@ void GenServer(int audio_port,int db_port){
     ThreadInfo info1;
     strcpy(info1.ip,"0.0.0.0");
     info1.port=db_port;
+    info1.custom0=db;
     pthread_t thread1;
     pthread_create(&thread1,NULL,server_db_thread,&info1);
 }
-void GenClient(char* ip,int audio_port,int db_port){
+void GenClient(char* ip,int audio_port,int db_port, int * status){
     FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw -", "r");
     FILE* play_fp = popen("play -q -t raw -b 16 -c 1 -e s -r 48000 -", "w");
     ThreadInfo info;
     info.custom0=rec_fp;
     info.custom1=play_fp;
+    info.status = status;
     strcpy(info.ip,ip);
     info.port=audio_port;
     pthread_t thread;
@@ -225,6 +272,7 @@ void GenClient(char* ip,int audio_port,int db_port){
     ThreadInfo info1;
     strcpy(info1.ip,ip);
     info1.port=db_port;
+    info1.status = status;
     pthread_t thread1;
     pthread_create(&thread1,NULL,client_db_thread,&info1);
 }
