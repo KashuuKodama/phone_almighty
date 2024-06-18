@@ -10,7 +10,8 @@
 
 #define FRAME_SIZE 256
 #define FILTER_LENGTH 128
-#define LEARNING_RATE 0.01
+#define LEARNING_RATE 0.0001
+#define MIN(i, j) (((i) < (j)) ? (i) : (j))
 
 // LMSフィルタの初期化
 void init_filter(complex double *filter, int length) {
@@ -28,6 +29,7 @@ void estimate_echo(complex double *filter, complex double *input, complex double
                 output[i] += filter[j] * input[i - j];
             }
         }
+        output[i] /= MIN(i + 1, FILTER_LENGTH);
     }
 }
 
@@ -37,9 +39,10 @@ void update_filter(complex double *filter, complex double *input, complex double
         complex double gradient = 0.0 + 0.0 * I;
         for (int j = 0; j < length; j++) {
             if (j - i >= 0) {
-                gradient += error[j] * conj(input[j - i]);
+                gradient += error[j] * conj(input[j - i]) / 32767.0;
             }
         }
+        gradient /= length;
         filter[i] += LEARNING_RATE * gradient;
     }
 }
