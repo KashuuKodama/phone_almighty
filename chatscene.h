@@ -7,8 +7,8 @@
 #include "primitives.h"
 #include "textures.h"
 #include "timer.h"
-#include "roomdata.h"
-#include "messagedata.h"
+#include "network/roomdata.h"
+#include "network/messagedata.h"
 #include "math.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -130,6 +130,20 @@ void ChatScene(Camera* camera){
     while (1)
     {
         char message[MAX_MESSAGE_LENGTH];
+        int key=getkey();
+        if(key!=0)
+        sprintf(message,"%d",key);
+        if(('a'<=key&&key<='z')||('A'<=key&&key<='Z')||key==' '){
+            sprintf(message,"%s%c",message,key);
+        }
+        //backspace
+        else if(key==127||key==8){
+            sprintf(message,"%ss",message);
+        }
+        //enter
+        else if(key==10){
+            sprintf(message,"%ss",message);
+        }
         UpdateTime();
         float time=GetTime();
         BeginCamera(camera);
@@ -165,18 +179,7 @@ void ChatScene(Camera* camera){
         draw_3d_text(camera,">",0,trs(vec3(-3,-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
         draw_3d_text(camera,message,0,trs(vec3(0,-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
         EndCamera(camera);
-        char key=getkey();
-        if(('a'<=key&&key<='z')||('A'<=key&&key<='Z')||key==' '){
-            sprintf(message,"%s%c",message,key);
-        }
-        //backspace
-        else if(key==127||key==8){
-            sprintf(message,"%ss",message);
-        }
-        //enter
-        else if(key==10){
-            sprintf(message,"%ss",message);
-        }
+        
     }
     
 }

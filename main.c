@@ -30,6 +30,7 @@ int main(int argc, char *argv[]){
         printf("%d\n",c);
     }
     */
+    
     //起動画面　
     StartMenu(camera);
     RoomsScene(camera);

@@ -17,7 +17,8 @@
 #ifdef NETWORK3_H
 #else
 #define NETWORK3_H
-#define N (SampleSize*4000/48000)
+#define N (SampleSize*8000/48000)
+#define MAX_USER_COUNT 10
 typedef struct 
 {
     char ip[256];
@@ -29,23 +30,25 @@ typedef struct
 void *toclient_audio_thread(void *param)
 {
     ThreadInfo info=*(ThreadInfo*)param;
-    int socket=*(int *)info.custom0;
-    complex double* global_spectrum=(complex double*)info.custom1;
-    complex double recv_spectrum[N],old_spectrum[N],back_spectrum[N];
-    zero_clear(recv_spectrum,N);
-    zero_clear(old_spectrum,N);
-    zero_clear(back_spectrum,N);
+    int* sockets=(int *)info.custom0;
+    int* user_count=(int *)info.custom1;
+    complex double global_spectrum[N];
+    complex double spectrums[MAX_USER_COUNT][N];
     while(1){
-        int read_size=read(socket,recv_spectrum,sizeof(complex double)*N);
-        if(read_size<=0)continue;
-        for(int i=0;i<N;i++){
-            global_spectrum[i]= global_spectrum[i] + recv_spectrum[i];
-            global_spectrum[i]= global_spectrum[i] - old_spectrum[i];
-            back_spectrum[i]= global_spectrum[i] - recv_spectrum[i];
+        zero_clear(global_spectrum,N);
+        for(int i=0;i<*user_count;i++){
+            int read_size=read(sockets[i],spectrums[i],sizeof(complex double)*N);
+            if(read_size<=0)continue;
+            for(int j=0;j<N;j++){
+                global_spectrum[j]+=spectrums[i][j];
+            }
+            
         }
-        write(socket,back_spectrum,sizeof(complex double)*N);
-        for(int i=0;i<N;i++){
-            old_spectrum[i]=recv_spectrum[i];
+        for(int i=0;i<*user_count;i++){
+            for(int j=0;j<N;j++){
+                spectrums[i][j]=global_spectrum[j]-spectrums[i][j];
+            }
+            write(sockets[i],spectrums[i],sizeof(complex double)*N);
         }
     }
 }
@@ -61,7 +64,6 @@ void *toclient_db_thread(void *param)
 void *server_audio_thread(void *param)
 {
     ThreadInfo info=*(ThreadInfo*)param;
-    complex double* global_spectrum=(complex double*)info.custom0;
     int ss;
     struct sockaddr_in addr;
     ss = socket(PF_INET, SOCK_STREAM, 0);
@@ -84,23 +86,25 @@ void *server_audio_thread(void *param)
         close(ss);
         exit(1);
     }
+    int sockets[MAX_USER_COUNT];
+    int user_count=0;
+    ThreadInfo client_audio_thread_info;
+    client_audio_thread_info.custom0=sockets;
+    client_audio_thread_info.custom1=&user_count;
+    pthread_t thread;
+    pthread_create(&thread,NULL,toclient_audio_thread,&client_audio_thread_info);
     while (1)
     {
-        ThreadInfo client_info;
         struct sockaddr_in client_addr;
         socklen_t len_client = sizeof(client_addr);
-        int client_s = accept(ss, (struct sockaddr *)&client_addr, &len_client);
-        pthread_t thread;
-        client_info.custom0=&client_s;
-        client_info.custom1=global_spectrum;
-        pthread_create(&thread,NULL,toclient_audio_thread,&client_info);
+        sockets[user_count]= accept(ss, (struct sockaddr *)&client_addr, &len_client);
+        user_count++;
         printf("new user joined\n");
 
     }
 }
 void *server_db_thread(void *param)
 {
-    DBData* db=(DBData*)(sizeof(DBData));
     ThreadInfo info=*(ThreadInfo*)param;
     int ss;
     struct sockaddr_in addr;
@@ -124,6 +128,8 @@ void *server_db_thread(void *param)
         close(ss);
         exit(1);
     }
+    int sockets[MAX_USER_COUNT];
+    int user_count=0;
     while (1)
     {
         ThreadInfo client_info;
@@ -193,8 +199,8 @@ void *client_db_thread(void *param)
 }
 void GenServer(int audio_port,int db_port){
     ThreadInfo info;
-    complex double global_spectrum[SampleSize];
-    info.custom0=global_spectrum;
+    complex double spectrums[MAX_USER_COUNT][SampleSize];
+    info.custom0=spectrums;
     strcpy(info.ip,"0.0.0.0");
     info.port=audio_port;
     pthread_t thread;
