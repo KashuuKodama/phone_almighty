@@ -150,6 +150,7 @@ void *server_audio_thread(void *param)
         printf("new user joined\n");
 
     }
+    close(ss);
 }
 void *server_db_thread(void *param)
 {
@@ -193,6 +194,7 @@ void *server_db_thread(void *param)
         user_count++;
         printf("new user joined\n");
     }
+    close(ss);
 }
 void *client_audio_thread(void *param)
 {
@@ -209,7 +211,9 @@ void *client_audio_thread(void *param)
     }
     addr.sin_port=htons(info.port);
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
-
+    if (ret < 0){
+        perror("audio");
+    }
     /* ミュート, アンミュートのステート(ブール型) */
     int * mute = info.status;   // 0: unmute, 1: mute
 
@@ -280,8 +284,15 @@ void *client_db_thread(void *param)
     }
     addr.sin_port=htons(info.port);
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
+    if (ret < 0){
+        perror("db");
+    }
     while(1){
-        int rn=read(s,db,sizeof(DBData));
+        DBData db_from_server;
+        int rn=read(s,&db_from_server,sizeof(DBData));
+        if(rn>0){
+            *db=db_from_server;
+        }
         if(request->method[0]==0){
 
         }
@@ -293,6 +304,7 @@ void *client_db_thread(void *param)
 }
 void GenServer(int audio_port,int db_port){
     ThreadInfo info;
+    //generate server db
     DBData* db=(DBData*)malloc(sizeof(DBData));
     //testdata
     db->rooms->length=1;
@@ -318,8 +330,8 @@ void GenServer(int audio_port,int db_port){
 }
 //dbはclientが今持っているdb.serverからの受信を受けて更新される. requestはdbに対する操作、受理されると0になる
 void GenClient(char* ip,int audio_port,int db_port, int * status,DBData* db,DBRequest* request){
-    FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw -", "r");
-    FILE* play_fp = popen("play -q -t raw -b 16 -c 1 -e s -r 48000 -", "w");
+    FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw - ", "r");
+    FILE* play_fp = popen("play -q -t raw -b 16 -c 1 -e s -r 48000 - ", "w");
     ThreadInfo info;
     info.custom0=rec_fp;
     info.custom1=play_fp;

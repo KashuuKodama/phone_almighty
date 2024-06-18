@@ -25,7 +25,6 @@ int main(int argc, char *argv[]){
     }
     if (argc == 3) {
         GenServer(atoi(argv[1]),atoi(argv[2]));
-        sleep(1);
         GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&status,&db,&request);
     }
     Camera* camera=SetupCamera(Deg2Rad*3,240,180);
