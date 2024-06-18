@@ -119,7 +119,7 @@ float textbox_right(Camera* camera,char* text,float y){
     }
     return 0;
 }
-void ChatScene(Camera* camera){
+void ChatScene(Camera* camera,RoomData* room,char* user){
     camera->pos=vec3(0,0,-1);
     Texture2D* back=open_texture("textures/back.txt");
     Texture2D* icon=open_texture("textures/rooms/icon0.txt");
@@ -132,36 +132,48 @@ void ChatScene(Camera* camera){
         UpdateTime();
         float time=GetTime();
 
-        char message[MAX_MESSAGE_LENGTH];
+        char input_text[MAX_MESSAGE_LENGTH];
         int keys[3];
         int n=getkeys(keys,3);
 
         //alphabet
-        if(n==1&&('a'<=keys[0]&&keys[0]<='z')||('A'<=keys[0]&&keys[0]<='Z')||keys[0]==' '){
-            sprintf(message,"%s%c",message,keys[0]);
+        if(n==1&&(('a'<=keys[0]&&keys[0]<='z')||('A'<=keys[0]&&keys[0]<='Z')||keys[0]==' '||keys[0]=='?'||('0'<=keys[0]&&keys[0]<='9'))){
+            sprintf(input_text,"%s%c",input_text,keys[0]);
+        }
+        //command
+        if(n==1&&keys[0]=='_'){
+            sprintf(input_text,"%s%c",input_text,keys[0]);
         }
         //backspace
         if(n==1&&(keys[0]==127||keys[0]==8)){
-            int last=strlen(message);
+            int last=strlen(input_text);
             if(last>0){
-                message[last-1]=0;
+                input_text[last-1]=0;
             }
         }
         //enter
         if(n==1&&keys[0]==10){
-            
+            //delete old data
+            if(room->length==MAX_MESSAGE_LENGTH){
+                room->length=room->length-1;
+                memmove(room->messages,room->messages+1,room->length*sizeof(MessageData));
+            }
+            room->length= room->length+1;
+            strcpy(room->messages[room->length-1].text,input_text);
+            strcpy(room->messages[room->length-1].user,user);
+            strcpy(input_text,"");
         }
         //arrow
         if(n==3&&keys[0]==27&&keys[1]==91){
             switch(keys[2]){
                 case 65:
-                    offset+=0.3f;
+                    offset-=0.3f;
                 break;
                 case 67:
                     //sprintf(message,"right");
                 break;
                 case 66:
-                    offset-=0.3f;
+                    offset+=0.3f;
                 break;
                 case 68:
                     //sprintf(message,"left");
@@ -190,19 +202,22 @@ void ChatScene(Camera* camera){
         draw_3d_text(camera,"AIZAWA",0.01,trs(vec3(-1,5,4),vec3(0,0,0),vec3(0.4,0.4,0.4)),232);
         draw_3d_model(camera,*circle,trs(vec3(3.3,5,4),vec3(-Deg2Rad*90,0,0),vec3(0.5,0.5,0.5)),*phone,232);
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*back,1);
-        
+
         float y=offset;
-        y-=textbox_left(camera,*icon1,"Hey hello",y);
-        y-=textbox_right(camera,"Hey hello",y);
-        y-=textbox_left(camera,*icon1,"yeah hello",y);
-        y-=textbox_right(camera,"hello",y);
-        y-=textbox_right(camera,"_0",y);
-        y-=textbox_left(camera,*icon1,"_3",y);
+        for(int i=0;i<room->length;i++){
+            MessageData message=room->messages[i];
+            if(strcmp(message.user,user)==0){
+                y-=textbox_right(camera,message.text,y);
+            }
+            else{
+                y-=textbox_left(camera,*icon1,message.text,y);
+            }
+        }
 
         draw_3d_model(camera,*plane(),trs(vec3(0,-5,4),vec3(0,0,0),vec3(9,2,1)),*gen_colortexture(255),1);
         draw_3d_text(camera,">",0,trs(vec3(-3.4,-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
-        draw_3d_model(camera,*plane(),trs(vec3(-3+0.4f*strlen(message),-4.75,3.9),vec3(0,0,0),vec3(0.4*(fmod(time,1)<0.5?1:0),0.1,0.5)),*gen_colortexture(16),1);
-        draw_3d_text(camera,message,0,trs(vec3(-3+0.2f*strlen(message),-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
+        draw_3d_model(camera,*plane(),trs(vec3(-3+0.4f*strlen(input_text),-4.75,3.9),vec3(0,0,0),vec3(0.4*(fmod(time,1)<0.5?1:0),0.1,0.5)),*gen_colortexture(16),1);
+        draw_3d_text(camera,input_text,0,trs(vec3(-3+0.2f*strlen(input_text),-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
         EndCamera(camera);
     }
     

@@ -7,6 +7,7 @@
 typedef struct 
 {
     char name[MAX_ROOM_NAME_SIZE];
+    int length;
     MessageData messages[MAX_MESSAGE_COUNT];
 
 }RoomData;

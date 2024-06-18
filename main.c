@@ -36,7 +36,22 @@ int main(int argc, char *argv[]){
     StartMenu(camera);
     RoomsScene(camera);
     //ゲーム画面
-    ChatScene(camera);
+    RoomData room;
+    room.length=4;
+    MessageData message;
+    strcpy(message.text,"hello");
+    strcpy(message.user,"kashuu");
+    room.messages[0]=message;
+    strcpy(message.text,"hello ooo");
+    strcpy(message.user,"yuri");
+    room.messages[1]=message;
+    strcpy(message.text,"_0");
+    strcpy(message.user,"kashuu");
+    room.messages[2]=message;
+     strcpy(message.text,"_3");
+    strcpy(message.user,"yuri");
+    room.messages[3]=message;
+    ChatScene(camera,&room,"kashuu");
     
     FreeCamera(camera);
     free(camera);

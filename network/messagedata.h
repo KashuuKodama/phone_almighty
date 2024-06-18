@@ -6,7 +6,7 @@
 typedef struct 
 {
     char user[MAX_NAME_SIZE];
-    char message[MAX_MESSAGE_SIZE];
+    char text[MAX_MESSAGE_SIZE];
 }MessageData;
 
 #endif
