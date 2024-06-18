@@ -41,7 +41,7 @@ void *toclient_audio_thread(void *param)
         /* データの受け取り(接続していないクライアントも含めて) */
         for(int i=0;i<*user_count;i++){
             int read_size=read(sockets[i],spectrums[i],sizeof(complex double)*N);
-            printf("r\n");
+            // printf("r\n");
             /* データを受け取っていない場合、サーバ側ではミュートの扱いにする */
             if(read_size<=0){
                 db->statuses[i]=1;
@@ -64,7 +64,7 @@ void *toclient_audio_thread(void *param)
                 continue;
             }
             write(sockets[i],spectrums[i],sizeof(complex double)*N);
-            printf("w\n");
+            // printf("w\n");
         }
     }
 }
@@ -193,7 +193,7 @@ void *client_audio_thread(void *param)
 
     while(1){
         short data[SampleSize];
-
+        memset(data, 0, sizeof(short)*SampleSize);
         /* データが届いていないもしくはミュートの場合は音を収録しない */
         if(fread(data,sizeof(short),SampleSize,rec_fp)<=0){
             continue;
@@ -201,25 +201,33 @@ void *client_audio_thread(void *param)
             sample_to_complex(data,X, SampleSize);
 
             /* エコーキャンセル */
-            // estimate_echo(filter,X,estimated_echo,SampleSize);
-            // for(int i=0;i<SampleSize;i++){
-            //     X_canceled[i] =  X[i] - estimated_echo[i];
-            // }
-            // update_filter(filter,X,X_canceled,SampleSize);
-            /* エコーキャンセルしない場合 */
-            for (int i=0; i<SampleSize;i++){
-                X_canceled[i] = X[i];
+            estimate_echo(filter,L,estimated_echo,SampleSize);
+            print_complex(stderr,estimated_echo,SampleSize);
+            for(int i=0;i<SampleSize;i++){
+                X_canceled[i] =  X[i] - estimated_echo[i];
             }
+            update_filter(filter,L,X_canceled,SampleSize);
+            // print_complex(stderr,filter,FILTER_LENGTH);
 
+            /* エコーキャンセルしない場合 */
+            // for (int i=0; i<SampleSize;i++){
+            //     X_canceled[i] = X[i];
+            // }
+            // print_complex(stderr,X_canceled,SampleSize);
             // fft(X,Y,SampleSize);
             fft(X_canceled,Y,SampleSize);
+            // printf("send\n");
+            // print_complex(stderr,Y,SampleSize);
             send_data = write(s,Y,N* sizeof(complex double));
         }
+        zero_clear(Y,SampleSize);
         read_data = read(s,Y,N* sizeof(complex double));
-
+        // printf("read\n");
+        // print_complex(stderr,Y,SampleSize);
         // ifft(Y,X,SampleSize);
         // complex_to_sample(X,data,SampleSize);
         ifft(Y,L,SampleSize);
+        // print_complex(stderr,L,SampleSize);
         complex_to_sample(L,data,SampleSize);
         fwrite(data,sizeof(short),SampleSize, play_fp);
     }
