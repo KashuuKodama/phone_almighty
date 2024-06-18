@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "network/dbdata.h"
+#include "network/dbrequest.h"
 #include "callscene.h"
 #ifdef CHATSCENE_H
 #else
@@ -121,7 +122,7 @@ float textbox_right(Camera* camera,char* text,float y){
     }
     return 0;
 }
-void ChatScene(Camera* camera,DBData* db,char* user){
+void ChatScene(Camera* camera,DBData* db,DBRequest* request,char* user){
     camera->pos=vec3(0,0,-1);
     Texture2D* back=open_texture("textures/back.txt");
     Texture2D* icon=open_texture("textures/rooms/icon0.txt");
@@ -166,7 +167,13 @@ void ChatScene(Camera* camera,DBData* db,char* user){
             offset=front;
             strcpy(room->messages[room->length-1].text,input_text);
             strcpy(room->messages[room->length-1].user,user);
+
+            strcpy(request->method,"ADD");
+            strcpy(request->user,user);
+            strcpy(request->message,input_text);
+
             strcpy(input_text,"");
+
         }
         //arrow
         if(n==3&&keys[0]==27&&keys[1]==91){

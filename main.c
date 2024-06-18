@@ -11,6 +11,7 @@
 #include "roomsscene.h"
 #include "network/network3.h"
 #include "network/dbdata.h"
+#include "network/dbrequest.h"
 #define PI 3.14f
 #define Deg2Rad PI/180
 
@@ -18,11 +19,14 @@ int main(int argc, char *argv[]){
     signal(SIGPIPE, SIG_IGN);
     int status;
     DBData db;
-    if (argc == 3) {
-        GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&status,&db);
+    DBRequest request;
+    if (argc == 4) {
+        GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&status,&db,&request);
     }
-    if (argc == 2) {
+    if (argc == 3) {
         GenServer(atoi(argv[1]),atoi(argv[2]));
+        sleep(1);
+        GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&status,&db,&request);
     }
     Camera* camera=SetupCamera(Deg2Rad*3,240,180);
     camera->pos.z=-1;
@@ -39,7 +43,7 @@ int main(int argc, char *argv[]){
     StartMenu(camera);
     RoomsScene(camera);
     //ゲーム画面
-    ChatScene(camera,&db,"kashuu");
+    ChatScene(camera,&db,&request,"kashuu");
     FreeCamera(camera);
     free(camera);
 }

@@ -199,7 +199,7 @@ void *client_audio_thread(void *param)
     ThreadInfo info=*(ThreadInfo*)param;
     FILE* rec_fp=(FILE*)info.custom0;
     FILE* play_fp=(FILE*)info.custom1;
-    printf("%s:%d\n",info.ip,info.port);
+    printf("audio%s:%d\n",info.ip,info.port);
     int s=socket(PF_INET,SOCK_STREAM,0);
     struct sockaddr_in addr;
     addr.sin_family=AF_INET;
@@ -235,7 +235,7 @@ void *client_audio_thread(void *param)
 
             /* エコーキャンセル */
             estimate_echo(filter,L,estimated_echo,SampleSize);
-            print_complex(stderr,estimated_echo,SampleSize);
+            // print_complex(stderr,estimated_echo,SampleSize);
             for(int i=0;i<SampleSize;i++){
                 X_canceled[i] =  X[i] - estimated_echo[i];
             }
@@ -269,6 +269,7 @@ void *client_db_thread(void *param)
 {
     ThreadInfo info=*(ThreadInfo*)param;
     DBData* db=(DBData*)info.custom0;
+    DBRequest* request=(DBRequest*)info.custom1;
     printf("%s:%d\n",info.ip,info.port);
     int s=socket(PF_INET,SOCK_STREAM,0);
     struct sockaddr_in addr;
@@ -280,15 +281,24 @@ void *client_db_thread(void *param)
     addr.sin_port=htons(info.port);
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
     while(1){
-        int n=read(s,db,sizeof(DBData));
-        if(n<=0){
-            usleep(500000);
+        int rn=read(s,db,sizeof(DBData));
+        if(request->method[0]==0){
+
+        }
+        else{
+            int wn=write(s,request,sizeof(DBRequest));
+            memset(request,0,sizeof(DBRequest));
         }
     }
 }
 void GenServer(int audio_port,int db_port){
     ThreadInfo info;
     DBData* db=(DBData*)malloc(sizeof(DBData));
+    //testdata
+    db->rooms->length=1;
+    strcpy(db->rooms->messages[0].text,"hello");
+    strcpy(db->rooms->messages[0].user,"hello");
+
     // complex double spectrums[MAX_USER_COUNT][SampleSize];
     // info.custom0=spectrums;
     info.custom0=db;
@@ -303,9 +313,11 @@ void GenServer(int audio_port,int db_port){
     info1.custom0=db;
     pthread_t thread1;
     pthread_create(&thread1,NULL,server_db_thread,&info1);
+    //wait till thread is created
+    sleep(1);
 }
-//dbはclientが今持っているdb.serverからの受信を受けて更新される
-void GenClient(char* ip,int audio_port,int db_port, int * status,DBData* db){
+//dbはclientが今持っているdb.serverからの受信を受けて更新される. requestはdbに対する操作、受理されると0になる
+void GenClient(char* ip,int audio_port,int db_port, int * status,DBData* db,DBRequest* request){
     FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw -", "r");
     FILE* play_fp = popen("play -q -t raw -b 16 -c 1 -e s -r 48000 -", "w");
     ThreadInfo info;
@@ -321,7 +333,10 @@ void GenClient(char* ip,int audio_port,int db_port, int * status,DBData* db){
     info1.port=db_port;
     info1.status = status;
     info1.custom0=db;
+    info1.custom1=request;
     pthread_t thread1;
     pthread_create(&thread1,NULL,client_db_thread,&info1);
+    //wait till thread is created
+    sleep(1);
 }
 #endif
