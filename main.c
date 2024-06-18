@@ -25,9 +25,11 @@ int main(int argc, char *argv[]){
     camera->pos.z=-1;
     /*
     while(1){
-        char c=getkey();
-        if(c!=0)
-        printf("%d\n",c);
+        int a[3];
+        int n=getkeys(a,3);
+        for(int i=0;i<n;i++){
+            printf("%d\n",a[i]);
+        }
     }
     */
     //起動画面　
