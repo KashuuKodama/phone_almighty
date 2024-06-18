@@ -126,26 +126,48 @@ void ChatScene(Camera* camera){
     Texture2D* icon1=open_texture("textures/rooms/icon4.txt");
     Texture2D* phone=open_texture("textures/phone.txt");
     Model3D* circle=open_obj("models/circle.obj");
-    
+    float offset=0;
     while (1)
     {
-        char message[MAX_MESSAGE_LENGTH];
-        int key=getkey();
-        if(key!=0)
-        sprintf(message,"%d",key);
-        if(('a'<=key&&key<='z')||('A'<=key&&key<='Z')||key==' '){
-            sprintf(message,"%s%c",message,key);
-        }
-        //backspace
-        else if(key==127||key==8){
-            sprintf(message,"%ss",message);
-        }
-        //enter
-        else if(key==10){
-            sprintf(message,"%ss",message);
-        }
         UpdateTime();
         float time=GetTime();
+
+        char message[MAX_MESSAGE_LENGTH];
+        int keys[3];
+        int n=getkeys(keys,3);
+
+        //alphabet
+        if(n==1&&('a'<=keys[0]&&keys[0]<='z')||('A'<=keys[0]&&keys[0]<='Z')||keys[0]==' '){
+            sprintf(message,"%s%c",message,keys[0]);
+        }
+        //backspace
+        if(n==1&&(keys[0]==127||keys[0]==8)){
+            int last=strlen(message);
+            if(last>0){
+                message[last-1]=0;
+            }
+        }
+        //enter
+        if(n==1&&keys[0]==10){
+            
+        }
+        //arrow
+        if(n==3&&keys[0]==27&&keys[1]==91){
+            switch(keys[2]){
+                case 65:
+                    offset+=0.3f;
+                break;
+                case 67:
+                    //sprintf(message,"right");
+                break;
+                case 66:
+                    offset-=0.3f;
+                break;
+                case 68:
+                    //sprintf(message,"left");
+                break;
+            }
+        }
         BeginCamera(camera);
         //起動画面の描画処理をここに書く
         //つかえる関数一覧
@@ -164,22 +186,24 @@ void ChatScene(Camera* camera){
         //Draw3DModel(camera,*Sphere(),TRS(Vec3(7,2-fmod(time,8),12),Vec3(time,0,0),Vec3_Mul(PINEAPPLE_SIZE*0.8,Vec3(1,1,1))),*PineappleTexture(),1);
         //Draw3DModel(camera,*Sphere(),TRS(Vec3(6,2-fmod(time+4,8),12),Vec3(time,0,0),Vec3_Mul(RINGO_SIZE*0.8,Vec3(1,1,1))),*RingoTexture(),1);
         //Draw3DModel(camera,*Sphere(),TRS(Vec3(-8,2-fmod(time+5,8),12),Vec3(time,0,0),Vec3_Mul(SUIKA_SIZE*0.8,Vec3(1,1,1))),*SuikaTexture(),1);
-        draw_3d_model(camera,*circle,trs(vec3(-4.7,7.4,6),vec3(-Deg2Rad*90,0,0),vec3(0.7,0.7,0.7)),*icon,1);
-        draw_3d_text(camera,"AIZAWA",0.01,trs(vec3(-1.5,7.4,6),vec3(0,0,0),vec3(0.6,0.6,0.6)),232);
-        draw_3d_model(camera,*circle,trs(vec3(4.7,7.4,6),vec3(-Deg2Rad*90,0,0),vec3(0.7,0.7,0.7)),*phone,232);
+        draw_3d_model(camera,*circle,trs(vec3(-3.3,5,4),vec3(-Deg2Rad*90,0,0),vec3(0.5,0.5,0.5)),*icon,1);
+        draw_3d_text(camera,"AIZAWA",0.01,trs(vec3(-1,5,4),vec3(0,0,0),vec3(0.4,0.4,0.4)),232);
+        draw_3d_model(camera,*circle,trs(vec3(3.3,5,4),vec3(-Deg2Rad*90,0,0),vec3(0.5,0.5,0.5)),*phone,232);
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*back,1);
-        float y=4;
+        
+        float y=offset;
         y-=textbox_left(camera,*icon1,"Hey hello",y);
         y-=textbox_right(camera,"Hey hello",y);
         y-=textbox_left(camera,*icon1,"yeah hello",y);
         y-=textbox_right(camera,"hello",y);
         y-=textbox_right(camera,"_0",y);
         y-=textbox_left(camera,*icon1,"_3",y);
+
         draw_3d_model(camera,*plane(),trs(vec3(0,-5,4),vec3(0,0,0),vec3(9,2,1)),*gen_colortexture(255),1);
-        draw_3d_text(camera,">",0,trs(vec3(-3,-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
-        draw_3d_text(camera,message,0,trs(vec3(0,-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
+        draw_3d_text(camera,">",0,trs(vec3(-3.4,-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
+        draw_3d_model(camera,*plane(),trs(vec3(-3+0.4f*strlen(message),-4.75,3.9),vec3(0,0,0),vec3(0.4*(fmod(time,1)<0.5?1:0),0.1,0.5)),*gen_colortexture(16),1);
+        draw_3d_text(camera,message,0,trs(vec3(-3+0.2f*strlen(message),-4.5,3.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
         EndCamera(camera);
-        
     }
     
 }
