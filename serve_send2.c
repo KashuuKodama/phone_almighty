@@ -17,14 +17,15 @@
 int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
     int status = 0;
+    DBData db;
     if (argc == 4) {
-        GenClient(argv[1], atoi(argv[2]),atoi(argv[3]),&status);
+        GenClient(argv[1], atoi(argv[2]),atoi(argv[3]),&status,&db);
     }
     if (argc == 3) {
         // GenServer(atoi(argv[1]));
         GenServer(atoi(argv[1]),atoi(argv[2]));
         sleep(3);
-        GenClient("0.0.0.0", atoi(argv[1]),atoi(argv[2]),&status);
+        GenClient("0.0.0.0", atoi(argv[1]),atoi(argv[2]),&status,&db);
     }
     while (1) {
         // printf("h\n");

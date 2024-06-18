@@ -14,6 +14,7 @@
 #include "complex.h"
 #include "../echo_cancel.h"
 #include "../fft.h"
+#include "dbrequest.h"
 #ifdef NETWORK3_H
 #else
 #define NETWORK3_H
@@ -71,10 +72,40 @@ void *toclient_audio_thread(void *param)
 void *toclient_db_thread(void *param)
 {
     ThreadInfo info=*(ThreadInfo*)param;
-    int socket=*(int *)info.custom0;
-    DBData* db=(DBData*)info.custom1;
+    int* sockets=(int *)info.custom0;
+    int* user_count=(int *)info.custom1;
+    DBData* db=(DBData*)info.custom2;
     while(1){
+        //read request
+        for(int i=0;i<*user_count;i++){
+            DBRequest request;
+            int n=read(sockets[i],&request,sizeof(DBRequest));
+            if(n<=0){
 
+            }
+            else{
+                if(strcmp(request.method,"ADD")==0){
+                    RoomData* room=db->rooms+request.room;
+                    if(room->length==MAX_MESSAGE_COUNT){
+                        //delete old data
+                        memmove(room->messages,room->messages+1,room->length-1);
+                        strcpy(room->messages[room->length-1].text,request.message);
+                        strcpy(room->messages[room->length-1].user,request.user);
+                    }
+                    else{
+                        room->length++;
+                        strcpy(room->messages[room->length-1].text,request.message);
+                        strcpy(room->messages[room->length-1].user,request.user);
+                    }
+                }
+                else if(strcmp(request.method,"JOIN")==0){
+
+                }
+            }
+        }
+        for(int i=0;i<*user_count;i++){
+            write(sockets[i],db,sizeof(DBData));
+        }
     }
 }
 void *server_audio_thread(void *param)
@@ -148,16 +179,18 @@ void *server_db_thread(void *param)
     }
     int sockets[MAX_USER_COUNT];
     int user_count=0;
+    ThreadInfo client_db_thread_info;
+    client_db_thread_info.custom0=sockets;
+    client_db_thread_info.custom1=&user_count;
+    client_db_thread_info.custom2=info.custom0;
+    pthread_t thread;
+    pthread_create(&thread,NULL,toclient_db_thread,&client_db_thread_info);
     while (1)
     {
-        ThreadInfo client_info;
         struct sockaddr_in client_addr;
         socklen_t len_client = sizeof(client_addr);
-        int client_s = accept(ss, (struct sockaddr *)&client_addr, &len_client);
-        pthread_t thread;
-        client_info.custom0=&client_s;
-        client_info.custom1=db;
-        pthread_create(&thread,NULL,toclient_db_thread,&client_info);
+        sockets[user_count]= accept(ss, (struct sockaddr *)&client_addr, &len_client);
+        user_count++;
         printf("new user joined\n");
     }
 }
@@ -235,6 +268,7 @@ void *client_audio_thread(void *param)
 void *client_db_thread(void *param)
 {
     ThreadInfo info=*(ThreadInfo*)param;
+    DBData* db=(DBData*)info.custom0;
     printf("%s:%d\n",info.ip,info.port);
     int s=socket(PF_INET,SOCK_STREAM,0);
     struct sockaddr_in addr;
@@ -246,6 +280,10 @@ void *client_db_thread(void *param)
     addr.sin_port=htons(info.port);
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
     while(1){
+        int n=read(s,db,sizeof(DBData));
+        if(n<=0){
+            usleep(500000);
+        }
     }
 }
 void GenServer(int audio_port,int db_port){
@@ -266,7 +304,8 @@ void GenServer(int audio_port,int db_port){
     pthread_t thread1;
     pthread_create(&thread1,NULL,server_db_thread,&info1);
 }
-void GenClient(char* ip,int audio_port,int db_port, int * status){
+//dbはclientが今持っているdb.serverからの受信を受けて更新される
+void GenClient(char* ip,int audio_port,int db_port, int * status,DBData* db){
     FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw -", "r");
     FILE* play_fp = popen("play -q -t raw -b 16 -c 1 -e s -r 48000 -", "w");
     ThreadInfo info;
@@ -281,6 +320,7 @@ void GenClient(char* ip,int audio_port,int db_port, int * status){
     strcpy(info1.ip,ip);
     info1.port=db_port;
     info1.status = status;
+    info1.custom0=db;
     pthread_t thread1;
     pthread_create(&thread1,NULL,client_db_thread,&info1);
 }
