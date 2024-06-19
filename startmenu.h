@@ -16,7 +16,7 @@
 #define STARTMENU_H
 #define PI 3.14f
 #define Deg2Rad PI/180
-void StartMenu(Camera* camera,DBData* db,DBRequest* request){
+void StartMenu(Camera* camera,DBData* db,DBRequests* requests){
     camera->pos=vec3(0,0,-1);
     camera->euler=vec3(0,0,0);
     Model3D* miku=open_obj("models/sphere.obj");
@@ -59,7 +59,7 @@ void StartMenu(Camera* camera,DBData* db,DBRequest* request){
             strcpy(message,"NEW User");
             //enter
             if(n==1&&keys[0]==10){
-                Create_Request_Add_User(request,CreateUser(input_text,icon_id));
+                Create_Request_Add_User(requests,CreateUser(input_text,icon_id));
             }
         }
         //登録済み
@@ -70,7 +70,8 @@ void StartMenu(Camera* camera,DBData* db,DBRequest* request){
         //change icon
         if(id>=0&&n==3&&keys[0]==27&&keys[1]==91&&keys[2]==65){
             icon_id++;
-            Create_Request_Edit_User(request,db->user_id,CreateUser(input_text,icon_id));
+            icon_id%=8;
+            Create_Request_Edit_User(requests,db->user_id,CreateUser(input_text,icon_id));
         }
         //skip
         if(id>=0&&n==3&&keys[0]==27&&keys[1]==91&&keys[2]==67){

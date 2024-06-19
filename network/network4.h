@@ -44,7 +44,7 @@ typedef struct
 typedef struct 
 {
     DBData* local_db;
-    DBRequest* request;
+    DBRequests* requests;
 }Client_DBThread_Config;
 
 // Audioサーバーの、クライアントを受け付けるスレッドの設定
@@ -187,9 +187,13 @@ void *client_audio_thread(void *param)
         short data[SampleSize];
         memset(data, 0, sizeof(short)*SampleSize);
         int n=fread(data,sizeof(short),SampleSize,config->rec_fp);
-        /* データが届いていないもしくはミュートの場合は音を収録しない */
+        /* 参加していないデータが届いていないもしくはミュートの場合は音を収録しない */
         //代わりに0を送る
-        if(n<=0||config->local_db->statuses[config->local_db->user_id].muted){
+        if(n<=0||
+        config->local_db->statuses[config->local_db->user_id].muted
+        ||!config->local_db->statuses[config->local_db->user_id].joined
+        ||config->local_db->current_room_id!=config->local_db->phone_room_id
+        ||config->local_db->current_room_id<0){
             complex double zero[N];
             write(s,zero,N* sizeof(complex double));
         } 
@@ -235,28 +239,39 @@ void *toclient_db_thread(void *param)
     DBData* db=config->db;
     while(1){
         int updateflag=0;
-        //read request
+        //read requests
         for(int i=0;i<config->socket_count;i++){
-            DBRequest request;
-            int n=read(config->sockets[i],&request,sizeof(DBRequest));
-            if(n==sizeof(DBRequest)){
-                if(strcmp(request.method,"CHAT")==0){
-                    RoomData* room=db->rooms+request.room_id;
-                    Room_Add_Message(room,Create_MessageData(request.user_id,request.message));
-                    updateflag=1;
-                }
-                else if(strcmp(request.method,"ADD_USER")==0){
-                    UserData* user=(UserData*)request.message;
-                    DB_Add_User(db,*user);
-                    updateflag=1;
-                }
-                else if(strcmp(request.method,"EDIT_USER")==0){
-                    UserData* user=(UserData*)request.message;
-                    DB_Edit_User(db,request.user_id,*user);
-                    updateflag=1;
-                }
-                else if(strcmp(request.method,"JOIN")==0){
-                    updateflag=1;
+            DBRequests requests;
+            int n=read(config->sockets[i],&requests,sizeof(DBRequests));
+            if(n==sizeof(DBRequests)){
+                for(int i=0;i<requests.requests_length;i++){
+                    DBRequest request=requests.requests[i];
+                    if(strcmp(request.method,"CHAT")==0){
+                        RoomData* room=db->rooms+request.room_id;
+                        Room_Add_Message(room,Create_MessageData(request.user_id,request.message));
+                        updateflag=1;
+                    }
+                    else if(strcmp(request.method,"ADD_USER")==0){
+                        UserData* user=(UserData*)request.message;
+                        DB_Add_User(db,*user);
+                        updateflag=1;
+                    }
+                    else if(strcmp(request.method,"EDIT_USER")==0){
+                        UserData* user=(UserData*)request.message;
+                        DB_Edit_User(db,request.user_id,*user);
+                        updateflag=1;
+                    }
+                    else if(strcmp(request.method,"JOIN")==0){
+                        updateflag=1;
+                    }
+                    else if(strcmp(request.method,"PHONE")==0){
+                        db->phone_room_id=request.room_id;
+                        updateflag=1;
+                    }
+                    else if(strcmp(request.method,"STATUS")==0){
+                        db->statuses[request.user_id]=*(AudioStatus*)request.message;
+                        updateflag=1;
+                    }
                 }
             }
         }
@@ -342,20 +357,24 @@ void *client_db_thread(void *param)
         int rn=read(s,&db_from_server,sizeof(DBData));
 
         int current_user=config->local_db->user_id;
+        int current_room=config->local_db->current_room_id;
         AudioStatus current_status=config->local_db->statuses[config->local_db->user_id];
 
         if(rn>0){
             *config->local_db=db_from_server;
-            //serverからaudio statusの変更を禁ずる
+            //serverからuseridの変更を禁ずる
             config->local_db->user_id=current_user;
+            //serverから選択中のトークの変更を禁ずる
+            config->local_db->current_room_id=current_room;
+            //serverからaudio statusの変更を禁ずる
             config->local_db->statuses[config->local_db->user_id]=current_status;
         }
-        if(config->request->method[0]==0){
+        if(config->requests->requests_length==0){
 
         }
         else{
-            int wn=write(s,config->request,sizeof(DBRequest));
-            memset(config->request,0,sizeof(DBRequest));
+            int wn=write(s,config->requests,sizeof(DBRequests));
+            memset(config->requests,0,sizeof(DBRequests));
         }
     }
 }
@@ -364,7 +383,12 @@ void GenServer(int audio_port,int db_port){
     DBData* db=(DBData*)malloc(sizeof(DBData));
     //ディスクからdbを読み込む
     DB_Load(db,"volume/db");
-
+    //初めはどのトークも会話してない
+    db->phone_room_id=-1;
+    //初めはトークを選択してない
+    db->current_room_id=-1;
+    //初めはみな通話に参加してない
+    memset(db->statuses,0,sizeof(AudioStatus)*MAX_USER_COUNT);
     {
         ThreadInfo* info=(ThreadInfo*)malloc(sizeof(ThreadInfo));
         Server_AudioThread_Config* config=(Server_AudioThread_Config*)malloc(sizeof(Server_AudioThread_Config));
@@ -388,7 +412,13 @@ void GenServer(int audio_port,int db_port){
     }
 }
 //dbはclientが今持っているdb.serverからの受信を受けて更新される. requestはdbに対する操作、受理されると0になる
-void GenClient(char* ip,int audio_port,int db_port,DBData* db,DBRequest* request){
+void GenClient(char* ip,int audio_port,int db_port,DBData* db,DBRequests* requests){
+
+    //初めはどのトークも会話してない
+    db->phone_room_id=-1;
+    //初めはトークを選択してない
+    db->current_room_id=-1;
+
     FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw - 2>log_rec.txt", "r");
     FILE* play_fp = popen("play -q -t raw -b 16 -c 1 -e s -r 48000 - 2>log_play.txt", "w");
     {
@@ -408,7 +438,7 @@ void GenClient(char* ip,int audio_port,int db_port,DBData* db,DBRequest* request
         ThreadInfo* info=(ThreadInfo*)malloc(sizeof(ThreadInfo));
         Client_DBThread_Config* config=(Client_DBThread_Config*)malloc(sizeof(Client_DBThread_Config));
         config->local_db=db;
-        config->request=request;
+        config->requests=requests;
         strcpy(info->ip,ip);
 
         info->port=db_port;

@@ -7,6 +7,7 @@
 #include "textures.h"
 #include "timer.h"
 #include "startmenu.h"
+#include "phonescene.h"
 #include "chatscene.h"
 #include "roomsscene.h"
 #include "network/network4.h"
@@ -18,7 +19,7 @@
 int main(int argc, char *argv[]){
     signal(SIGPIPE, SIG_IGN);
     DBData db;
-    DBRequest request;
+    DBRequests requests;
     //とりあえずゲストユーザー
     db.user_id=0;
     //初めの入力は消去
@@ -26,12 +27,12 @@ int main(int argc, char *argv[]){
     getkeys(tmp,100);
 
     if (argc == 4) {
-        GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&db,&request);
+        GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&db,&requests);
     }
     if (argc == 3) {
         GenServer(atoi(argv[1]),atoi(argv[2]));
         sleep(3);
-        GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&db,&request);
+        GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&db,&requests);
     }
     Camera* camera=SetupCamera(Deg2Rad*3,280,210);
     camera->pos.z=-1;
@@ -45,11 +46,11 @@ int main(int argc, char *argv[]){
     //起動画面　
     goto start;
 start:
-    StartMenu(camera,&db,&request);
+    StartMenu(camera,&db,&requests);
     goto rooms;
 rooms:
     {
-        int ret=RoomsScene(camera,&db,&request);
+        int ret=RoomsScene(camera,&db,&requests);
         if(ret==1){
             goto chat;
         }
@@ -59,7 +60,7 @@ rooms:
     }
 chat:
     {
-        int ret=ChatScene(camera,&db,&request,0);
+        int ret=ChatScene(camera,&db,&requests);
         if(ret==1){
             goto call;
         }
@@ -69,8 +70,8 @@ chat:
     }
 call:
     {
-        int ret=CallScene(camera,&db,&request,0);
-        if(ret==1){
+        int ret=PhoneScene(camera,&db,&requests);
+        if(ret==-1){
             goto chat;
         }
         FreeCamera(camera);

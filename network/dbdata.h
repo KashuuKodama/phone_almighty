@@ -13,9 +13,14 @@ typedef struct
     //把握しているユーザー
     char registered_users_length;
     UserData registered_users[MAX_NAME_SIZE];
+    //ユーザーのaudioステータス
     AudioStatus statuses[MAX_USER_COUNT];
+    //通話中のトーク
+    char phone_room_id;
     //local dbにアクセスするユーザー
     char user_id;
+    //ユーザーがいるルーム
+    char current_room_id;
     
 }DBData;
 RoomData* DB_Get_Room(DBData* self,int room_id){

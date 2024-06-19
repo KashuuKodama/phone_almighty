@@ -24,7 +24,7 @@ void Room(Camera* camera,Texture2D icon,RoomData* room,float y){
     draw_3d_model(camera,circle,trs(vec3(-4.2,y,6.01),vec3(-Deg2Rad*90,0,0),vec3(1.1,1.1,1.1)),*gen_colortexture(16),1);
     draw_3d_text(camera,room->name,0.03,trs(vec3(-2.2+strlen(room->name)*0.3,y,6),vec3(0,0,0),vec3(0.6,0.8,0.8)),232);
 }
-int RoomsScene(Camera* camera,DBData* db,DBRequest* request){
+int RoomsScene(Camera* camera,DBData* db,DBRequests* requests){
     camera->pos=vec3(0,0,-1);
     Texture2D* icon0=open_texture("textures/rooms/icon0.txt");
     Model3D* circle=open_obj("models/circle.obj");
@@ -40,6 +40,7 @@ int RoomsScene(Camera* camera,DBData* db,DBRequest* request){
                 case 65:
                 break;
                 case 67:
+                    db->current_room_id=0;
                     return 1;
                 break;
                 case 66:

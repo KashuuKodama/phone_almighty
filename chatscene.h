@@ -16,7 +16,6 @@
 #include "network/dbdata.h"
 #include "network/dbrequest.h"
 #include "network/userdata.h"
-#include "callscene.h"
 #ifdef CHATSCENE_H
 #else
 #define CHATSCENE_H
@@ -127,13 +126,13 @@ float textbox_right(Camera* camera,char* text,float y){
     }
     return 0;
 }
-int ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
+int ChatScene(Camera* camera,DBData* db,DBRequests* requests){
     camera->pos=vec3(0,0,-1);
     Texture2D* back=open_texture("textures/back.txt");
     Texture2D* icon=open_texture("textures/rooms/icon0.txt");
     Texture2D* phone=open_texture("textures/phone.txt");
     Model3D* circle=open_obj("models/circle.obj");
-    RoomData* room=DB_Get_Room(db,room_id);
+    RoomData* room=DB_Get_Room(db,db->current_room_id);
     float offset=0;
     float front=0;
     while (1)
@@ -163,7 +162,7 @@ int ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
         //enter
         if(n==1&&keys[0]==10){
             Room_Add_Message(room,Create_MessageData(db->user_id,input_text));
-            Create_Request_Chat(request,db->user_id,room_id,input_text);
+            Create_Request_Chat(requests,db->user_id,db->current_room_id,input_text);
             offset=front;
             strcpy(input_text,"");
 
