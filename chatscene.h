@@ -122,16 +122,16 @@ float textbox_right(Camera* camera,char* text,float y){
     }
     return 0;
 }
-void ChatScene(Camera* camera,DBData* db,DBRequest* request,char* user){
+void ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
     camera->pos=vec3(0,0,-1);
     Texture2D* back=open_texture("textures/back.txt");
     Texture2D* icon=open_texture("textures/rooms/icon0.txt");
     Texture2D* icon1=open_texture("textures/rooms/icon4.txt");
     Texture2D* phone=open_texture("textures/phone.txt");
     Model3D* circle=open_obj("models/circle.obj");
+    RoomData* room=DB_Get_Room(db,room_id);
     float offset=0;
     float front=0;
-    RoomData* room=db->rooms;
     while (1)
     {
         UpdateTime();
@@ -158,20 +158,9 @@ void ChatScene(Camera* camera,DBData* db,DBRequest* request,char* user){
         }
         //enter
         if(n==1&&keys[0]==10){
-            //delete old data
-            if(room->length==MAX_MESSAGE_LENGTH){
-                room->length=room->length-1;
-                memmove(room->messages,room->messages+1,room->length*sizeof(MessageData));
-            }
-            room->length= room->length+1;
+            Room_Add_Message(room,Create_MessageData(db->user_id,input_text));
+            Create_Request_Add(request,db->user_id,room_id,input_text);
             offset=front;
-            strcpy(room->messages[room->length-1].text,input_text);
-            strcpy(room->messages[room->length-1].user,user);
-
-            strcpy(request->method,"ADD");
-            strcpy(request->user,user);
-            strcpy(request->message,input_text);
-
             strcpy(input_text,"");
 
         }
@@ -182,7 +171,7 @@ void ChatScene(Camera* camera,DBData* db,DBRequest* request,char* user){
                     offset-=0.6f;
                 break;
                 case 67:
-                    CallScene(camera,db,user);
+                    //CallScene(camera,db,user);
                 break;
                 case 66:
                     offset+=0.6f;
@@ -193,32 +182,15 @@ void ChatScene(Camera* camera,DBData* db,DBRequest* request,char* user){
             }
         }
         BeginCamera(camera);
-        //起動画面の描画処理をここに書く
-        //つかえる関数一覧
-        /*
-        Draw2DQuad
-        Draw2DTexture
-        Draw2DLine
-        Draw3DLine
-        Draw3DQuad
-        Draw3DModel
-        Draw3DText
-        */
-        //Draw3DText(camera,"3D",0.2f,TRS(Vec3(0,-1,3),Vec3(0,time,0),Vec3(1,1,1)),5);
-        //Draw3DText(camera,"SUIKA GAME",0.2f,TRS(Vec3(1,0,8),Vec3(0,0,0),Vec3(1,1,1)),39);
-
-        //Draw3DModel(camera,*Sphere(),TRS(Vec3(7,2-fmod(time,8),12),Vec3(time,0,0),Vec3_Mul(PINEAPPLE_SIZE*0.8,Vec3(1,1,1))),*PineappleTexture(),1);
-        //Draw3DModel(camera,*Sphere(),TRS(Vec3(6,2-fmod(time+4,8),12),Vec3(time,0,0),Vec3_Mul(RINGO_SIZE*0.8,Vec3(1,1,1))),*RingoTexture(),1);
-        //Draw3DModel(camera,*Sphere(),TRS(Vec3(-8,2-fmod(time+5,8),12),Vec3(time,0,0),Vec3_Mul(SUIKA_SIZE*0.8,Vec3(1,1,1))),*SuikaTexture(),1);
         draw_3d_model(camera,*circle,trs(vec3(-3.3,5,4),vec3(-Deg2Rad*90,0,0),vec3(0.5,0.5,0.5)),*icon,1);
-        draw_3d_text(camera,"AIZAWA",0.01,trs(vec3(-1,5,4),vec3(0,0,0),vec3(0.4,0.4,0.4)),232);
+        draw_3d_text(camera,room->name,0.01,trs(vec3(-1,5,4),vec3(0,0,0),vec3(0.4,0.4,0.4)),232);
         draw_3d_model(camera,*circle,trs(vec3(3.3,5,4),vec3(-Deg2Rad*90,0,0),vec3(0.5,0.5,0.5)),*phone,232);
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*back,1);
 
         float y=offset;
-        for(int i=0;i<room->length;i++){
+        for(int i=0;i<room->message_length;i++){
             MessageData message=room->messages[i];
-            if(strcmp(message.user,user)==0){
+            if(message.user_id==db->user_id){
                 y-=textbox_right(camera,message.text,y);
             }
             else{

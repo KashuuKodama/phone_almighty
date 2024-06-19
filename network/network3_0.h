@@ -10,7 +10,6 @@
 #include <string.h>
 #include <unistd.h>
 #include "pthread.h"
-#include "filedata.h"
 #include "complex.h"
 #include "../echo_cancel.h"
 #include "../fft.h"
