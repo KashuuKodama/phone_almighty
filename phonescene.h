@@ -51,6 +51,15 @@ int PhoneScene(Camera* camera,DBData* db,DBRequests* requests){
         //別のトーク会話が開始された時
         int keys[3];
         int n=getkeys(keys,3);
+        //mute/unmute
+        if(n==1&&keys[0]=='a'){
+            db->statuses[db->user_id].muted=0;
+            Create_Request_Status(requests,db->user_id,db->statuses[db->user_id]);
+        }
+        if(n==1&&keys[0]=='b'){
+            db->statuses[db->user_id].muted=1;
+            Create_Request_Status(requests,db->user_id,db->statuses[db->user_id]);
+        }
         //arrow
         if(n==3&&keys[0]==27&&keys[1]==91){
             switch(keys[2]){
