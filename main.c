@@ -43,10 +43,37 @@ int main(int argc, char *argv[]){
     //     // }
     // }
     //起動画面　
+    goto start;
+start:
     StartMenu(camera,&db,&request);
-    RoomsScene(camera,&db,&request);
-    //ゲーム画面
-    ChatScene(camera,&db,&request,0);
-    FreeCamera(camera);
-    free(camera);
+    goto rooms;
+rooms:
+    {
+        int ret=RoomsScene(camera,&db,&request);
+        if(ret==1){
+            goto chat;
+        }
+        else{
+            goto start;
+        }
+    }
+chat:
+    {
+        int ret=ChatScene(camera,&db,&request,0);
+        if(ret==1){
+            goto call;
+        }
+        else{
+            goto rooms;
+        }
+    }
+call:
+    {
+        int ret=CallScene(camera,&db,&request,0);
+        if(ret==1){
+            goto chat;
+        }
+        FreeCamera(camera);
+        free(camera);
+    }
 }

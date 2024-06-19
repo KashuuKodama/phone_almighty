@@ -49,8 +49,8 @@ int DB_Find_User(DBData* self,char* name){
 int DB_Add_User(DBData* self,UserData user){
     //古参は追い出す
     if(self->registered_users_length==MAX_USER_COUNT){
-         self->registered_users[0]=user;
-        return 0;
+        self->registered_users_length--;
+        memmove(self->registered_users,self->registered_users+1,(MAX_USER_COUNT-1)*sizeof(int));
     }
     self->registered_users[self->registered_users_length]=user;
     self->registered_users_length++;

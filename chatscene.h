@@ -127,7 +127,7 @@ float textbox_right(Camera* camera,char* text,float y){
     }
     return 0;
 }
-void ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
+int ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
     camera->pos=vec3(0,0,-1);
     Texture2D* back=open_texture("textures/back.txt");
     Texture2D* icon=open_texture("textures/rooms/icon0.txt");
@@ -175,13 +175,13 @@ void ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
                     offset-=0.6f;
                 break;
                 case 67:
-                    //CallScene(camera,db,user);
+                    return 1;
                 break;
                 case 66:
                     offset+=0.6f;
                 break;
                 case 68:
-                    //CallScene(camera,db,user);
+                    return -1;
                 break;
             }
         }

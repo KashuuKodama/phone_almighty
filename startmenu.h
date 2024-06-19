@@ -101,9 +101,12 @@ void StartMenu(Camera* camera,DBData* db,DBRequest* request){
         draw_3d_text(camera,message,0.1,trs(vec3(0.5,-3,9),vec3(0,0,0),vec3(0.6,0.6,1)),16);
         draw_3d_text(camera,input_text,0.01,trs(vec3(0.5,-2,9),vec3(0,0,0),vec3(0.7,0.7,1)),255);
         draw_3d_text(camera,fmod(time*4,2)<1?"Press right":"",0.1f,trs(vec3(0.5,-9,9),vec3(0,0,0),vec3(1,1,1)),255);
-        Texture2D* icon=User_Get_Icon(db->registered_users+db->user_id);
+        Texture2D* icon=id==-1?open_texture("textures/icons/icon0.txt"):User_Get_Icon(db->registered_users+db->user_id);
         draw_3d_model(camera,*circle,trs(vec3(0,2,9),vec3(-Deg2Rad*90,0,Deg2Rad*180),vec3(3,3,3)),*icon,1);
         free(icon);
+        char id_text[10];
+        sprintf(id_text,"ID %d",id);
+        draw_3d_text(camera,id_text,0.1f,trs(vec3(0.5,10,8.6),vec3(0,0,0),vec3(0.6,0.6,0.6)),255);
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*back,1);
         draw_3d_model(camera,*miku,trs(vec3(0,-6,9),vec3(0,time,0),vec3(2,2,2)),*earth,1);
         //Draw3DModel(camera,*Sphere(),TRS(Vec3(6,2-fmod(time+4,8),12),Vec3(time,0,0),Vec3_Mul(RINGO_SIZE*0.8,Vec3(1,1,1))),*RingoTexture(),1);

@@ -24,7 +24,7 @@ void Room(Camera* camera,Texture2D icon,RoomData* room,float y){
     draw_3d_model(camera,circle,trs(vec3(-4.2,y,6.01),vec3(-Deg2Rad*90,0,0),vec3(1.1,1.1,1.1)),*gen_colortexture(16),1);
     draw_3d_text(camera,room->name,0.03,trs(vec3(-2.2+strlen(room->name)*0.3,y,6),vec3(0,0,0),vec3(0.6,0.8,0.8)),232);
 }
-void RoomsScene(Camera* camera,DBData* db,DBRequest* request){
+int RoomsScene(Camera* camera,DBData* db,DBRequest* request){
     camera->pos=vec3(0,0,-1);
     Texture2D* icon0=open_texture("textures/rooms/icon0.txt");
     Model3D* circle=open_obj("models/circle.obj");
@@ -32,6 +32,23 @@ void RoomsScene(Camera* camera,DBData* db,DBRequest* request){
     {
         UpdateTime();
         float time=GetTime();
+         int keys[3];
+        int n=getkeys(keys,3);
+        //arrow
+        if(n==3&&keys[0]==27&&keys[1]==91){
+            switch(keys[2]){
+                case 65:
+                break;
+                case 67:
+                    return 1;
+                break;
+                case 66:
+                break;
+                case 68:
+                    return -1;
+                break;
+            }
+        }
         BeginCamera(camera);
         for(int i=0;i<db->rooms_length;i++){
             Room(camera,*icon0,DB_Get_Room(db,i),-5*i);
@@ -43,11 +60,7 @@ void RoomsScene(Camera* camera,DBData* db,DBRequest* request){
         char test[7];
         sprintf(test,"%d",db->user_id);
          draw_3d_text(camera,test,0.03,trs(vec3(0,5,9.9),vec3(0,0,0),vec3(0.8,0.8,0.8)),16);
-        char key=getkey();
-        //次の画面に移るときにbreak
-        if(key=='a'){
-            break;
-        }
+        
         EndCamera(camera);
     }
     

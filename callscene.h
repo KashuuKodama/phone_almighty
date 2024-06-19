@@ -21,7 +21,7 @@
 #define Deg2Rad PI/180
 
 
-void CallScene(Camera* camera,DBData* db,char* user){
+int CallScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
     camera->pos=vec3(0,0,-1);
     Texture2D* back=open_texture("textures/back.txt");
     Texture2D* icon=open_texture("textures/rooms/icon0.txt");
@@ -39,6 +39,12 @@ void CallScene(Camera* camera,DBData* db,char* user){
         if(n==1&&keys[0]==127){
             break;
         }
+        if(keys[0]=='a'){
+            db->statuses[db->user_id].muted=1;
+        }
+        if(keys[0]=='b'){
+            db->statuses[db->user_id].muted=0;
+        }
         BeginCamera(camera);
         draw_3d_model(camera,*circle,trs(vec3(-3.3,5,4),vec3(-Deg2Rad*90,0,0),vec3(0.5,0.5,0.5)),*icon,1);
         draw_3d_text(camera,"AIZAWA",0.01,trs(vec3(-1,5,4),vec3(0,0,0),vec3(0.4,0.4,0.4)),232);
@@ -50,7 +56,7 @@ void CallScene(Camera* camera,DBData* db,char* user){
         }
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*back,1);
         draw_3d_model(camera,*plane(),trs(vec3(0,-10,9.8),vec3(0,0,0),vec3(18,4,1)),*gen_colortexture(255),1);
-         draw_3d_model(camera,*plane(),trs(vec3(0,-8,9.7),vec3(0,0,0),vec3(3,3,3)),*phone_red,1);
+        draw_3d_model(camera,*plane(),trs(vec3(0,-8,9.7),vec3(0,0,0),vec3(3,3,3)),*phone_red,1);
         EndCamera(camera);
         
     }

@@ -144,7 +144,9 @@ void draw_3d_text(Camera* c,char* text,float padding,Matrix4x4 transform,int col
     }
     float offset=-(float)length/2-padding*(length-1)/2;
     while(*text!='\0'){
-        draw_3d_model(c,*plane(),mul_matrix(transform,translate(vec3(offset,0,0))),*gen_alphabettexture(*text),color);
+        Texture2D* texture=gen_alphabettexture(*text);
+        draw_3d_model(c,*plane(),mul_matrix(transform,translate(vec3(offset,0,0))),*texture,color);
+        free(texture);
         offset+=1+padding;
         text++;
     }
