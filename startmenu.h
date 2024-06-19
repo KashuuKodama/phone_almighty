@@ -75,11 +75,6 @@ void StartMenu(Camera* camera,DBData* db,DBRequests* requests){
         }
         //skip
         if(id>=0&&n==3&&keys[0]==27&&keys[1]==91&&keys[2]==67){
-            free(miku);
-            free(circle);
-            free(earth);
-            free(back);
-            free(side);
             fclose(profile_fd);
             break;
         }

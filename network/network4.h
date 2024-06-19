@@ -189,9 +189,10 @@ void *client_audio_thread(void *param)
         int n=fread(data,sizeof(short),SampleSize,config->rec_fp);
         /* 参加していないデータが届いていないもしくはミュートの場合は音を収録しない */
         //代わりに0を送る
+        AudioStatus status=config->local_db->statuses[config->local_db->user_id];
         if(n<=0||
-        config->local_db->statuses[config->local_db->user_id].muted
-        ||!config->local_db->statuses[config->local_db->user_id].joined
+        status.muted
+        ||!status.joined
         ||config->local_db->current_room_id!=config->local_db->phone_room_id
         ||config->local_db->current_room_id<0){
             complex double zero[N];
@@ -228,6 +229,7 @@ void *client_audio_thread(void *param)
         ifft(Y,L,SampleSize);
         // print_complex(stderr,L,SampleSize);
         complex_to_sample(L,data,SampleSize);
+        if(status.joined)
         fwrite(data,sizeof(short),SampleSize, config->play_fp);
     }
 }
@@ -256,9 +258,17 @@ void *toclient_db_thread(void *param)
                         DB_Add_User(db,*user);
                         updateflag=1;
                     }
+                    else if(strcmp(request.method,"ADD_ROOM")==0){
+                        DB_Add_Room(db,request.message,request.user_id);
+                        updateflag=1;
+                    }
                     else if(strcmp(request.method,"EDIT_USER")==0){
                         UserData* user=(UserData*)request.message;
                         DB_Edit_User(db,request.user_id,*user);
+                        updateflag=1;
+                    }
+                    else if(strcmp(request.method,"EDIT_ROOM")==0){
+                        DB_Edit_Room(db,request.room_id,request.message,request.user_id);
                         updateflag=1;
                     }
                     else if(strcmp(request.method,"JOIN")==0){
@@ -272,6 +282,7 @@ void *toclient_db_thread(void *param)
                         db->statuses[request.user_id]=*(AudioStatus*)request.message;
                         updateflag=1;
                     }
+                    
                 }
             }
         }

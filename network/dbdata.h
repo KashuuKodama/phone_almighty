@@ -22,6 +22,7 @@ typedef struct
     //ユーザーがいるルーム
     char current_room_id;
     
+    
 }DBData;
 RoomData* DB_Get_Room(DBData* self,int room_id){
     return self->rooms+room_id;
@@ -61,8 +62,25 @@ int DB_Add_User(DBData* self,UserData user){
     self->registered_users_length++;
     return self->registered_users_length-1;
 }
+//ルームを追加
+int DB_Add_Room(DBData* self,char* name,char icon){
+    //古参は追い出す
+    if(self->rooms_length==MAX_ROOM_COUNT){
+        self->rooms_length--;
+        memmove(self->rooms,self->rooms+1,(MAX_ROOM_COUNT-1)*sizeof(RoomData));
+    }
+    strcpy(self->rooms[self->rooms_length].name,name);
+    self->rooms[self->rooms_length].icon=icon;
+    self->rooms_length++;
+    return self->rooms_length-1;
+}
 //ユーザーを編集
 void DB_Edit_User(DBData* self,char user_id,UserData user){
     self->registered_users[user_id]=user;
+}
+//ルームを編集
+void DB_Edit_Room(DBData* self,char room_id,char* name,char icon){
+    strcpy(self->rooms[room_id].name,name);
+    self->rooms[room_id].icon=icon;
 }
 #endif
