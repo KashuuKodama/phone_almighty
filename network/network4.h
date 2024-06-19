@@ -52,6 +52,7 @@ void *toclient_db_thread(void *param)
     Server_DBToClientThread_Config* config=(Server_DBToClientThread_Config*)info.config;
     DBData* db=config->db;
     while(1){
+        int updateflag=0;
         //read request
         for(int i=0;i<config->socket_count;i++){
             DBRequest request;
@@ -60,6 +61,7 @@ void *toclient_db_thread(void *param)
 
             }
             else{
+                updateflag=1;
                 if(strcmp(request.method,"ADD")==0){
                     RoomData* room=db->rooms+request.room_id;
                     Room_Add_Message(room,Create_MessageData(request.user_id,request.message));
@@ -71,6 +73,9 @@ void *toclient_db_thread(void *param)
         }
         for(int i=0;i<config->socket_count;i++){
             write(config->sockets[i],db,sizeof(DBData));
+        }
+        if(updateflag){
+            DB_Save(db,"volume/db");
         }
         usleep(50000);
     }
@@ -161,6 +166,8 @@ void *client_db_thread(void *param)
 void GenServer(int audio_port,int db_port){
     //generate server db
     DBData* db=(DBData*)malloc(sizeof(DBData));
+    //ディスクからdbを読み込む
+    DB_Load(db,"volume/db");
     //testdata
     // complex double spectrums[MAX_USER_COUNT][SampleSize];
     // info.custom0=spectrums;

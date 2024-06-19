@@ -16,4 +16,17 @@ typedef struct
 RoomData* DB_Get_Room(DBData* self,int room_id){
     return self->rooms+room_id;
 }
+RoomData* DB_Get_User(DBData* self,int room_id){
+    return self->rooms+room_id;
+}
+//ディスクからdbを読み込む(サーバー側の処理)
+void DB_Load(DBData* self,char* path){
+    FILE* fd=fopen(path,"rb");
+    fread(self,sizeof(DBData),1,fd);
+}
+//ディスクにdbを書き込む(サーバー側の処理)
+void DB_Save(DBData* self,char* path){
+    FILE* fd=fopen(path,"wb");
+    fwrite(self,sizeof(DBData),1,fd);
+}
 #endif
