@@ -33,12 +33,14 @@ void RoomsScene(Camera* camera,DBData* db,DBRequest* request){
         UpdateTime();
         float time=GetTime();
         BeginCamera(camera);
-        for(int i=0;i<MAX_ROOM_COUNT;i++){
+        for(int i=0;i<db->rooms_length;i++){
             Room(camera,*icon0,DB_Get_Room(db,i),-5*i);
         }
 
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*gen_colortexture(255),1);
         draw_3d_text(camera,"TALKs",0.03,trs(vec3(0,11,9.9),vec3(0,0,0),vec3(1.4,1.4,1.4)),16);
+        draw_3d_text(camera,"search",0.03,trs(vec3(0,9,9.9),vec3(0,0,0),vec3(0.8,0.8,0.8)),16);
+
         char key=getkey();
         //次の画面に移るときにbreak
         if(key=='a'){

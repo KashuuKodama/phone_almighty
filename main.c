@@ -19,20 +19,21 @@ int main(int argc, char *argv[]){
     signal(SIGPIPE, SIG_IGN);
     DBData db;
     DBRequest request;
+    //とりあえずゲストユーザー
+    db.user_id=0;
+    //初めの入力は消去
+    int tmp[100];
+    getkeys(tmp,100);
+
     if (argc == 4) {
         GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&db,&request);
-        //test
-        db.user_id=0;
     }
     if (argc == 3) {
         GenServer(atoi(argv[1]),atoi(argv[2]));
-        sleep(4);
+        sleep(3);
         GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&db,&request);
-        //test
-        db.user_id=1;
-        (db.statuses+1)->muted=1;
     }
-    Camera* camera=SetupCamera(Deg2Rad*3,240,180);
+    Camera* camera=SetupCamera(Deg2Rad*3,280,210);
     camera->pos.z=-1;
     // while(1){
     //     // int a[3];
@@ -42,7 +43,7 @@ int main(int argc, char *argv[]){
     //     // }
     // }
     //起動画面　
-    StartMenu(camera);
+    StartMenu(camera,&db,&request);
     RoomsScene(camera,&db,&request);
     //ゲーム画面
     ChatScene(camera,&db,&request,0);

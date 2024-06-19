@@ -239,17 +239,18 @@ void *toclient_db_thread(void *param)
         for(int i=0;i<config->socket_count;i++){
             DBRequest request;
             int n=read(config->sockets[i],&request,sizeof(DBRequest));
-            if(n<=0){
-
-            }
-            else{
-                updateflag=1;
-                if(strcmp(request.method,"ADD")==0){
+            if(n==sizeof(DBRequest)){
+                if(strcmp(request.method,"CHAT")==0){
                     RoomData* room=db->rooms+request.room_id;
                     Room_Add_Message(room,Create_MessageData(request.user_id,request.message));
+                    updateflag=1;
+                }
+                else if(strcmp(request.method,"ADD_USER")==0){
+                    DB_Add_User(db,request.message);
+                    updateflag=1;
                 }
                 else if(strcmp(request.method,"JOIN")==0){
-
+                    updateflag=1;
                 }
             }
         }
@@ -332,12 +333,14 @@ void *client_db_thread(void *param)
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
     while(1){
         DBData db_from_server;
-        //serverからaudio statusの変更を禁ずる
+        int rn=read(s,&db_from_server,sizeof(DBData));
+
         int current_user=config->local_db->user_id;
         AudioStatus current_status=config->local_db->statuses[config->local_db->user_id];
-        int rn=read(s,&db_from_server,sizeof(DBData));
+
         if(rn>0){
             *config->local_db=db_from_server;
+            //serverからaudio statusの変更を禁ずる
             config->local_db->user_id=current_user;
             config->local_db->statuses[config->local_db->user_id]=current_status;
         }

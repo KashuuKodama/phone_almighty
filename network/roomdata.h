@@ -3,12 +3,12 @@
 #define ROOMDATA_H
 #include "messagedata.h"
 #define MAX_MESSAGE_COUNT 30
-#define MAX_ROOM_NAME_SIZE 30
+#define MAX_ROOM_NAME_SIZE 15
 //トークルームを保持する構造体
 typedef struct 
 {
     char name[MAX_ROOM_NAME_SIZE];
-    int message_length;
+    char message_length;
     MessageData messages[MAX_MESSAGE_COUNT];
 
 }RoomData;

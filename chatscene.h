@@ -159,7 +159,7 @@ void ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
         //enter
         if(n==1&&keys[0]==10){
             Room_Add_Message(room,Create_MessageData(db->user_id,input_text));
-            Create_Request_Add(request,db->user_id,room_id,input_text);
+            Create_Request_Chat(request,db->user_id,room_id,input_text);
             offset=front;
             strcpy(input_text,"");
 

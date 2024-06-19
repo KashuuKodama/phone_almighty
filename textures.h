@@ -6,6 +6,7 @@
 #ifdef TEXTURES_H
 #else
 #define TEXTURES_H
+
 Texture2D* gen_colortexture(int color){
     static Texture2D* texture;
     if(texture==NULL){
@@ -59,7 +60,7 @@ Texture2D* gen_alphabettexture(char c){
         sprintf(path,"font/<.txt");
     }
     if('a'<=c && c<='z'){
-        sprintf(path,"font/%c.txt",c);
+        sprintf(path,"font/_%c.txt",c);
     }
     if('A'<=c && c<='Z'){
         sprintf(path,"font/%c.txt",c-'A'+'a');
