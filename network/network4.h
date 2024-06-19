@@ -189,9 +189,10 @@ void *client_audio_thread(void *param)
         int n=fread(data,sizeof(short),SampleSize,config->rec_fp);
         /* 参加していないデータが届いていないもしくはミュートの場合は音を収録しない */
         //代わりに0を送る
+        AudioStatus status=config->local_db->statuses[config->local_db->user_id];
         if(n<=0||
-        config->local_db->statuses[config->local_db->user_id].muted
-        ||!config->local_db->statuses[config->local_db->user_id].joined
+        status.muted
+        ||!status.joined
         ||config->local_db->current_room_id!=config->local_db->phone_room_id
         ||config->local_db->current_room_id<0){
             complex double zero[N];
@@ -228,6 +229,7 @@ void *client_audio_thread(void *param)
         ifft(Y,L,SampleSize);
         // print_complex(stderr,L,SampleSize);
         complex_to_sample(L,data,SampleSize);
+        if(status.joined)
         fwrite(data,sizeof(short),SampleSize, config->play_fp);
     }
 }

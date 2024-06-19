@@ -84,10 +84,14 @@ int PhoneScene(Camera* camera,DBData* db,DBRequests* requests){
         for(int i=0,j=0;i<MAX_USER_COUNT;i++){
             if(db->statuses[i].joined){
                 UserData* user=db->registered_users+i;
+                AudioStatus status=db->statuses[i];
                 Texture2D* user_icon=User_Get_Icon(user);
-                draw_3d_model(camera,*plane(),trs(vec3(-6.75f+i*4.5f,5-4.5*j,9.9),vec3(0,0,0),vec3(4.5,4.5,4.5)),*user_icon,1);
+                int x=j%2;
+                int y=j/2;
+                draw_3d_model(camera,*plane(),trs(vec3(-4.5f+x*9,5-9*y,9.9),vec3(0,0,0),vec3(9,9,9)),*user_icon,1);
                 free(user_icon);
-                draw_3d_text(camera,user->name,0.01,trs(vec3(-6.75f+i*4.5f,4-4.5*j,9.8),vec3(0,0,0),vec3(0.6,0.6,0.6)),232);
+                draw_3d_model(camera,*circle,trs(vec3(-4.5f+x*9,1.5-9*y,9.8),vec3(Deg2Rad*90,Deg2Rad*90,0),vec3(0.5,0.5,0.5)),*gen_colortexture(status.muted?9:10),1);
+                j++;
             }
         }
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*back,1);
