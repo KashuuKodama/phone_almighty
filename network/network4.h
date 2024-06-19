@@ -258,9 +258,17 @@ void *toclient_db_thread(void *param)
                         DB_Add_User(db,*user);
                         updateflag=1;
                     }
+                    else if(strcmp(request.method,"ADD_ROOM")==0){
+                        DB_Add_Room(db,request.message,request.user_id);
+                        updateflag=1;
+                    }
                     else if(strcmp(request.method,"EDIT_USER")==0){
                         UserData* user=(UserData*)request.message;
                         DB_Edit_User(db,request.user_id,*user);
+                        updateflag=1;
+                    }
+                    else if(strcmp(request.method,"EDIT_ROOM")==0){
+                        DB_Edit_Room(db,request.room_id,request.message,request.user_id);
                         updateflag=1;
                     }
                     else if(strcmp(request.method,"JOIN")==0){
@@ -274,6 +282,7 @@ void *toclient_db_thread(void *param)
                         db->statuses[request.user_id]=*(AudioStatus*)request.message;
                         updateflag=1;
                     }
+                    
                 }
             }
         }

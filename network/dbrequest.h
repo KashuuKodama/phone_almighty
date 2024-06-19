@@ -3,7 +3,7 @@
 #define DBREQUEST_H
 #include "roomdata.h"
 #include "messagedata.h"
-#define MAX_REQUESTS_COUNT 4
+#define MAX_REQUESTS_COUNT 3
 #define MAX_REQUEST_MESSAGE_SIZE 32
 
 typedef struct 
@@ -46,6 +46,23 @@ void Create_Request_Add_User(DBRequests* self,UserData user){
     DBRequest* request=self->requests+self->requests_length;
     memcpy(request->message,&user,sizeof(UserData));
     strcpy(request->method,"ADD_USER");
+    self->requests_length++;
+}
+//ルームを追加
+void Create_Request_Add_Room(DBRequests* self,char* name,char icon){
+    DBRequest* request=self->requests+self->requests_length;
+    request->user_id=icon;
+    strcpy(request->message,name);
+    strcpy(request->method,"ADD_ROOM");
+    self->requests_length++;
+}
+//ルームを編集
+void Create_Request_Edit_Room(DBRequests* self,char room_id,RoomData room){
+    DBRequest* request=self->requests+self->requests_length;
+    request->user_id=room.icon;
+    request->room_id=room_id;
+    strcpy(request->message,room.name);
+    strcpy(request->method,"EDIT_ROOM");
     self->requests_length++;
 }
 //ユーザーを編集

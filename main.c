@@ -22,9 +22,6 @@ int main(int argc, char *argv[]){
     DBRequests requests;
     //とりあえずゲストユーザー
     db.user_id=0;
-    //初めの入力は消去
-    int tmp[100];
-    getkeys(tmp,100);
 
     if (argc == 4) {
         GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&db,&requests);
@@ -46,10 +43,18 @@ int main(int argc, char *argv[]){
     //起動画面　
     goto start;
 start:
-    StartMenu(camera,&db,&requests);
-    goto rooms;
+    {
+        //初めの入力は消去
+        int tmp[100];
+        getkeys(tmp,100);
+        StartMenu(camera,&db,&requests);
+        goto rooms;
+    }
 rooms:
     {
+            //初めの入力は消去
+        int tmp[100];
+        getkeys(tmp,100);
         int ret=RoomsScene(camera,&db,&requests);
         if(ret==1){
             goto chat;
@@ -60,6 +65,9 @@ rooms:
     }
 chat:
     {
+        //初めの入力は消去
+        int tmp[100];
+        getkeys(tmp,100);
         int ret=ChatScene(camera,&db,&requests);
         if(ret==1){
             goto call;
@@ -70,6 +78,9 @@ chat:
     }
 call:
     {
+        //初めの入力は消去
+        int tmp[100];
+        getkeys(tmp,100);
         int ret=PhoneScene(camera,&db,&requests);
         if(ret==-1){
             goto chat;

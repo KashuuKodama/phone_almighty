@@ -8,15 +8,23 @@
 typedef struct 
 {
     char name[MAX_ROOM_NAME_SIZE];
+    char icon;
     char message_length;
     MessageData messages[MAX_MESSAGE_COUNT];
 
 }RoomData;
 
-RoomData Create_RoomData(char* name){
+RoomData Create_RoomData(char* name,char icon){
     RoomData room;
+    room.message_length=0;
+    room.icon=icon;
     strcpy(room.name,name);
     return room;
+}
+Texture2D* Room_Get_Icon(RoomData* self){
+    char path[30];
+    sprintf(path,"textures/rooms/icon%d.txt",self->icon%8);
+    return open_texture(path);
 }
 //トークルームにチャットメッセージを追加
 void Room_Add_Message(RoomData* self,MessageData message){

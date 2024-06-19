@@ -47,8 +47,11 @@ Texture2D* gen_alphabettexture(char c){
     if(c==' '){
         sprintf(path,"font/ .txt");
     }
-     if(c=='-'){
+    if(c=='-'){
         sprintf(path,"font/-.txt");
+    }
+    if(c=='+'){
+        sprintf(path,"font/+.txt");
     }
     if(c=='>'){
         sprintf(path,"font/>.txt");

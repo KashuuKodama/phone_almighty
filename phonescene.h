@@ -40,24 +40,22 @@ int PhoneScene(Camera* camera,DBData* db,DBRequests* requests){
 
     while (1)
     {
-
+        //別のトーク会話が開始された時
         if(db->phone_room_id!=-1&&db->phone_room_id!=db->current_room_id){
+            db->statuses[db->user_id].joined=0;
+            Create_Request_Status(requests,db->user_id,db->statuses[db->user_id]);
             //戻る
             return -1;
         }
         else{
             
         }
-        //別のトーク会話が開始された時
         int keys[3];
         int n=getkeys(keys,3);
         //mute/unmute
         if(n==1&&keys[0]=='a'){
-            db->statuses[db->user_id].muted=0;
-            Create_Request_Status(requests,db->user_id,db->statuses[db->user_id]);
-        }
-        if(n==1&&keys[0]=='b'){
-            db->statuses[db->user_id].muted=1;
+            db->statuses[db->user_id].muted++;
+            db->statuses[db->user_id].muted%=2;
             Create_Request_Status(requests,db->user_id,db->statuses[db->user_id]);
         }
         //arrow
@@ -95,8 +93,8 @@ int PhoneScene(Camera* camera,DBData* db,DBRequests* requests){
             }
         }
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*back,1);
-        draw_3d_model(camera,*plane(),trs(vec3(0,-10,9.8),vec3(0,0,0),vec3(18,4,1)),*gen_colortexture(255),1);
-        draw_3d_model(camera,*plane(),trs(vec3(0,-8,9.7),vec3(0,0,0),vec3(3,3,3)),*phone_red,1);
+        draw_3d_model(camera,*plane(),trs(vec3(0,-10,9.8),vec3(0,0,0),vec3(18,6,1)),*gen_colortexture(255),1);
+        draw_3d_model(camera,*plane(),trs(vec3(0,-10,9.7),vec3(0,0,0),vec3(3,3,3)),*phone_red,1);
         EndCamera(camera);
         
     }

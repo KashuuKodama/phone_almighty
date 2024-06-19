@@ -22,7 +22,6 @@
 #define PI 3.14f
 #define Deg2Rad PI/180
 #define MAX_MESSAGE_LINE_LENGTH 15
-#define MAX_MESSAGE_LENGTH 30
 #define MAX_STAMPS_COUNT 30
 float textbox_left(Camera* camera,UserData user,char* text,float y){
     static Model3D text_half;
@@ -129,18 +128,19 @@ float textbox_right(Camera* camera,char* text,float y){
 int ChatScene(Camera* camera,DBData* db,DBRequests* requests){
     camera->pos=vec3(0,0,-1);
     Texture2D* back=open_texture("textures/back.txt");
-    Texture2D* icon=open_texture("textures/rooms/icon0.txt");
+    Texture2D* icon=Room_Get_Icon(DB_Get_Room(db,db->current_room_id));
     Texture2D* phone=open_texture("textures/phone.txt");
     Model3D* circle=open_obj("models/circle.obj");
     RoomData* room=DB_Get_Room(db,db->current_room_id);
     float offset=0;
     float front=0;
+    char input_text[MAX_MESSAGE_SIZE];
+    strcpy(input_text,"");
     while (1)
     {
         UpdateTime();
         float time=GetTime();
 
-        char input_text[MAX_MESSAGE_LENGTH];
         int keys[3];
         int n=getkeys(keys,3);
 
