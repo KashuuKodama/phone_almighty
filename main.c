@@ -17,16 +17,15 @@
 
 int main(int argc, char *argv[]){
     signal(SIGPIPE, SIG_IGN);
-    int status;
     DBData db;
     DBRequest request;
     if (argc == 4) {
-        GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&status,&db,&request);
+        GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&db,&request);
     }
     if (argc == 3) {
         GenServer(atoi(argv[1]),atoi(argv[2]));
         sleep(4);
-        GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&status,&db,&request);
+        GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&db,&request);
     }
     Camera* camera=SetupCamera(Deg2Rad*3,240,180);
     camera->pos.z=-1;
@@ -39,9 +38,9 @@ int main(int argc, char *argv[]){
     // }
     //起動画面　
     StartMenu(camera);
-    RoomsScene(camera);
+    RoomsScene(camera,&db,&request);
     //ゲーム画面
-    ChatScene(camera,&db,&request,0,0);
+    ChatScene(camera,&db,&request,0);
     FreeCamera(camera);
     free(camera);
 }
