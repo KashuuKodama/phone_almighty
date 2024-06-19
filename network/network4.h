@@ -333,11 +333,13 @@ void *client_db_thread(void *param)
     while(1){
         DBData db_from_server;
         //serverからaudio statusの変更を禁ずる
-        AudioStatus currentstatus=config->local_db->statuses[config->local_db->user_id];
+        int current_user=config->local_db->user_id;
+        AudioStatus current_status=config->local_db->statuses[config->local_db->user_id];
         int rn=read(s,&db_from_server,sizeof(DBData));
         if(rn>0){
             *config->local_db=db_from_server;
-            config->local_db->statuses[config->local_db->user_id]=currentstatus;
+            config->local_db->user_id=current_user;
+            config->local_db->statuses[config->local_db->user_id]=current_status;
         }
         if(config->request->method[0]==0){
 
