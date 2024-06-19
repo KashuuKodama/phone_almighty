@@ -15,7 +15,7 @@
 #include <string.h>
 #include "network/dbdata.h"
 #include "network/dbrequest.h"
-#include "callscene.h"
+#include "network/userdata.h"
 #ifdef CHATSCENE_H
 #else
 #define CHATSCENE_H
@@ -24,11 +24,12 @@
 #define MAX_MESSAGE_LINE_LENGTH 15
 #define MAX_MESSAGE_LENGTH 30
 #define MAX_STAMPS_COUNT 30
-float textbox_left(Camera* camera,Texture2D icon,char* text,float y){
+float textbox_left(Camera* camera,UserData user,char* text,float y){
     static Model3D text_half;
     static Model3D text_plane;
     static Model3D circle;
     static Texture2D* stamps;
+    Texture2D* icon=User_Get_Icon(&user);
     if(text_half.vertices_length==0){
         text_half=*open_obj("models/circle_half.obj");
     }
@@ -59,21 +60,24 @@ float textbox_left(Camera* camera,Texture2D icon,char* text,float y){
         int id=atoi(&text[1]);
         float width=3;
         float height=(float)stamps[id].height/stamps[id].width*width;
-        draw_3d_model(camera,circle,trs(vec3(-4+0.1f,y-height/2-0.3f,5),vec3(Deg2Rad*-90,0,0),vec3(0.6,0.6,0.6)),icon,1);
+        draw_3d_model(camera,circle,trs(vec3(-4+0.1f,y-height/2-0.3f,5),vec3(Deg2Rad*-90,0,0),vec3(0.6,0.6,0.6)),*icon,1);
         draw_3d_model(camera,text_plane,trs(vec3(-2.5+width/2-0.3f,y-height/2-0.3f,5),vec3(Deg2Rad*90,Deg2Rad*90,0),vec3(width/2,1,height/2)),stamps[id],1);
+        free(icon);
         return height+0.6f;
     }
     //text
     else{
         float width=(float)strlen(text)*0.4f;
         float height=0.8*(((int)strlen(text)/MAX_MESSAGE_LINE_LENGTH)+1);
-        draw_3d_model(camera,circle,trs(vec3(-4+0.1f,y-height/2-0.3f,5),vec3(Deg2Rad*-90,0,0),vec3(0.6,0.6,0.6)),icon,1);
+        draw_3d_model(camera,circle,trs(vec3(-4+0.1f,y-height/2-0.3f,5),vec3(Deg2Rad*-90,0,0),vec3(0.6,0.6,0.6)),*icon,1);
         draw_3d_model(camera,text_half,trs(vec3(-2+0.1f,y-height/2-0.3f,5),vec3(Deg2Rad*90,Deg2Rad*90,0),vec3(height/2,1,1)),*gen_colortexture(255),1);
         draw_3d_model(camera,text_half,trs(vec3(-2+width-0.1f,y-height/2-0.3f,5),vec3(Deg2Rad*90,Deg2Rad*-90,0),vec3(height/2,1,1)),*gen_colortexture(255),1);
         draw_3d_model(camera,text_plane,trs(vec3(-2+width/2,y-height/2-0.3f,5),vec3(Deg2Rad*90,Deg2Rad*90,0),vec3(height/2,1,width/2)),*gen_colortexture(255),1);
         draw_3d_text(camera,text,0,trs(vec3(-2+width/2,y-height/2-0.3f,4.9),vec3(0,0,0),vec3(0.4,0.5,0.5)),16);
+        free(icon);
         return height+0.6f;
     }
+    free(icon);
     return 0;
 }
 float textbox_right(Camera* camera,char* text,float y){
@@ -122,14 +126,13 @@ float textbox_right(Camera* camera,char* text,float y){
     }
     return 0;
 }
-void ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
+int ChatScene(Camera* camera,DBData* db,DBRequests* requests){
     camera->pos=vec3(0,0,-1);
     Texture2D* back=open_texture("textures/back.txt");
     Texture2D* icon=open_texture("textures/rooms/icon0.txt");
-    Texture2D* icon1=open_texture("textures/rooms/icon4.txt");
     Texture2D* phone=open_texture("textures/phone.txt");
     Model3D* circle=open_obj("models/circle.obj");
-    RoomData* room=DB_Get_Room(db,room_id);
+    RoomData* room=DB_Get_Room(db,db->current_room_id);
     float offset=0;
     float front=0;
     while (1)
@@ -159,7 +162,7 @@ void ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
         //enter
         if(n==1&&keys[0]==10){
             Room_Add_Message(room,Create_MessageData(db->user_id,input_text));
-            Create_Request_Add(request,db->user_id,room_id,input_text);
+            Create_Request_Chat(requests,db->user_id,db->current_room_id,input_text);
             offset=front;
             strcpy(input_text,"");
 
@@ -171,13 +174,13 @@ void ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
                     offset-=0.6f;
                 break;
                 case 67:
-                    //CallScene(camera,db,user);
+                    return 1;
                 break;
                 case 66:
                     offset+=0.6f;
                 break;
                 case 68:
-                    //CallScene(camera,db,user);
+                    return -1;
                 break;
             }
         }
@@ -194,7 +197,7 @@ void ChatScene(Camera* camera,DBData* db,DBRequest* request,int room_id){
                 y-=textbox_right(camera,message.text,y);
             }
             else{
-                y-=textbox_left(camera,*icon1,message.text,y);
+                y-=textbox_left(camera,*(db->registered_users+message.user_id),message.text,y);
             }
         }
         front=offset-y;

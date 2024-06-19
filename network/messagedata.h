@@ -6,7 +6,7 @@
 //チャットメッセージを保持する構造体
 typedef struct 
 {
-    int user_id;
+    char user_id;
     char text[MAX_MESSAGE_SIZE];
 }MessageData;
 MessageData Create_MessageData(int user_id,char* text){

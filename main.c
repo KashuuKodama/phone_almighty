@@ -7,6 +7,7 @@
 #include "textures.h"
 #include "timer.h"
 #include "startmenu.h"
+#include "phonescene.h"
 #include "chatscene.h"
 #include "roomsscene.h"
 #include "network/network4.h"
@@ -18,21 +19,22 @@
 int main(int argc, char *argv[]){
     signal(SIGPIPE, SIG_IGN);
     DBData db;
-    DBRequest request;
+    DBRequests requests;
+    //とりあえずゲストユーザー
+    db.user_id=0;
+    //初めの入力は消去
+    int tmp[100];
+    getkeys(tmp,100);
+
     if (argc == 4) {
-        GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&db,&request);
-        //test
-        db.user_id=0;
+        GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&db,&requests);
     }
     if (argc == 3) {
         GenServer(atoi(argv[1]),atoi(argv[2]));
-        sleep(4);
-        GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&db,&request);
-        //test
-        db.user_id=1;
-        (db.statuses+1)->muted=1;
+        sleep(3);
+        GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&db,&requests);
     }
-    Camera* camera=SetupCamera(Deg2Rad*3,240,180);
+    Camera* camera=SetupCamera(Deg2Rad*3,280,210);
     camera->pos.z=-1;
     // while(1){
     //     // int a[3];
@@ -42,10 +44,37 @@ int main(int argc, char *argv[]){
     //     // }
     // }
     //起動画面　
-    StartMenu(camera);
-    RoomsScene(camera,&db,&request);
-    //ゲーム画面
-    ChatScene(camera,&db,&request,0);
-    FreeCamera(camera);
-    free(camera);
+    goto start;
+start:
+    StartMenu(camera,&db,&requests);
+    goto rooms;
+rooms:
+    {
+        int ret=RoomsScene(camera,&db,&requests);
+        if(ret==1){
+            goto chat;
+        }
+        else{
+            goto start;
+        }
+    }
+chat:
+    {
+        int ret=ChatScene(camera,&db,&requests);
+        if(ret==1){
+            goto call;
+        }
+        else{
+            goto rooms;
+        }
+    }
+call:
+    {
+        int ret=PhoneScene(camera,&db,&requests);
+        if(ret==-1){
+            goto chat;
+        }
+        FreeCamera(camera);
+        free(camera);
+    }
 }

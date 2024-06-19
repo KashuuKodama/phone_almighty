@@ -7,8 +7,17 @@
 typedef struct 
 {
     char name[MAX_NAME_SIZE];
+    int icon;
 }UserData;
-void User_SetName(UserData* self,char* name){
-    strcpy(self->name,name);
+UserData CreateUser(char* name,int icon){
+    UserData user;
+    strcpy(user.name,name);
+    user.icon=icon;
+    return user;
+}
+Texture2D* User_Get_Icon(UserData* self){
+    char path[30];
+    sprintf(path,"textures/icons/icon%d.txt",self->icon);
+    return open_texture(path);
 }
 #endif
