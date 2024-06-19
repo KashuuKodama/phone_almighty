@@ -9,7 +9,7 @@
 #include "startmenu.h"
 #include "chatscene.h"
 #include "roomsscene.h"
-#include "network/network3.h"
+#include "network/network4.h"
 #include "network/dbdata.h"
 #include "network/dbrequest.h"
 #define PI 3.14f
@@ -25,24 +25,23 @@ int main(int argc, char *argv[]){
     }
     if (argc == 3) {
         GenServer(atoi(argv[1]),atoi(argv[2]));
+        sleep(4);
         GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&status,&db,&request);
     }
     Camera* camera=SetupCamera(Deg2Rad*3,240,180);
     camera->pos.z=-1;
-    /*
-    while(1){
-        int a[3];
-        int n=getkeys(a,3);
-        for(int i=0;i<n;i++){
-            printf("%d\n",a[i]);
-        }
-    }
-    */
+    // while(1){
+    //     // int a[3];
+    //     // int n=getkeys(a,3);
+    //     // for(int i=0;i<n;i++){
+    //     //     printf("%d\n",a[i]);
+    //     // }
+    // }
     //起動画面　
     StartMenu(camera);
     RoomsScene(camera);
     //ゲーム画面
-    ChatScene(camera,&db,&request,"kashuu");
+    ChatScene(camera,&db,&request,0,0);
     FreeCamera(camera);
     free(camera);
 }
