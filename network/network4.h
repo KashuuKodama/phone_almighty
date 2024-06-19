@@ -246,7 +246,13 @@ void *toclient_db_thread(void *param)
                     updateflag=1;
                 }
                 else if(strcmp(request.method,"ADD_USER")==0){
-                    DB_Add_User(db,request.message);
+                    UserData* user=(UserData*)request.message;
+                    DB_Add_User(db,*user);
+                    updateflag=1;
+                }
+                else if(strcmp(request.method,"EDIT_USER")==0){
+                    UserData* user=(UserData*)request.message;
+                    DB_Edit_User(db,request.user_id,*user);
                     updateflag=1;
                 }
                 else if(strcmp(request.method,"JOIN")==0){

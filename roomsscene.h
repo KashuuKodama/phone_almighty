@@ -40,7 +40,9 @@ void RoomsScene(Camera* camera,DBData* db,DBRequest* request){
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*gen_colortexture(255),1);
         draw_3d_text(camera,"TALKs",0.03,trs(vec3(0,11,9.9),vec3(0,0,0),vec3(1.4,1.4,1.4)),16);
         draw_3d_text(camera,"search",0.03,trs(vec3(0,9,9.9),vec3(0,0,0),vec3(0.8,0.8,0.8)),16);
-
+        char test[7];
+        sprintf(test,"%d",db->user_id);
+         draw_3d_text(camera,test,0.03,trs(vec3(0,5,9.9),vec3(0,0,0),vec3(0.8,0.8,0.8)),16);
         char key=getkey();
         //次の画面に移るときにbreak
         if(key=='a'){

@@ -25,12 +25,12 @@ void StartMenu(Camera* camera,DBData* db,DBRequest* request){
     Texture2D* back=open_texture("textures/back.txt");
     Texture2D* side=open_texture("textures/text_side.txt");
     FILE* profile_fd=fopen("profile/profile.txt","r");
-    Texture2D* icon=open_texture("textures/rooms/icon0.txt");
     char input_text[MAX_NAME_SIZE];
     char line[30];
     fgets(line,30,profile_fd);
     sscanf(line,"name:%s",input_text);
     char message[30];
+    int icon_id=0;
     while (1)
     {
         UpdateTime();
@@ -59,24 +59,27 @@ void StartMenu(Camera* camera,DBData* db,DBRequest* request){
             strcpy(message,"NEW User");
             //enter
             if(n==1&&keys[0]==10){
-                Create_Request_Add_User(request,input_text);
+                Create_Request_Add_User(request,CreateUser(input_text,icon_id));
             }
         }
         //登録済み
         else{
-            if(db->user_id!=id){
-                db->user_id=id;
-                char iconname[100];
-                sprintf(iconname,"textures/rooms/icon%d.txt",id);
-                icon=open_texture(iconname);
-                strcpy(message,"up");
-            }
-            else 
-                strcpy(message,"Registered User");
+            db->user_id=id;
+            strcpy(message,"Registered User");
         }
-
+        //change icon
+        if(id>=0&&n==3&&keys[0]==27&&keys[1]==91&&keys[2]==65){
+            icon_id++;
+            Create_Request_Edit_User(request,db->user_id,CreateUser(input_text,icon_id));
+        }
         //skip
-        if(db->user_id>0&&n==3&&keys[0]==27&&keys[1]==91&&keys[2]==67){
+        if(id>=0&&n==3&&keys[0]==27&&keys[1]==91&&keys[2]==67){
+            free(miku);
+            free(circle);
+            free(earth);
+            free(back);
+            free(side);
+            fclose(profile_fd);
             break;
         }
 
@@ -98,7 +101,9 @@ void StartMenu(Camera* camera,DBData* db,DBRequest* request){
         draw_3d_text(camera,message,0.1,trs(vec3(0.5,-3,9),vec3(0,0,0),vec3(0.6,0.6,1)),16);
         draw_3d_text(camera,input_text,0.01,trs(vec3(0.5,-2,9),vec3(0,0,0),vec3(0.7,0.7,1)),255);
         draw_3d_text(camera,fmod(time*4,2)<1?"Press right":"",0.1f,trs(vec3(0.5,-9,9),vec3(0,0,0),vec3(1,1,1)),255);
+        Texture2D* icon=User_Get_Icon(db->registered_users+db->user_id);
         draw_3d_model(camera,*circle,trs(vec3(0,2,9),vec3(-Deg2Rad*90,0,Deg2Rad*180),vec3(3,3,3)),*icon,1);
+        free(icon);
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*back,1);
         draw_3d_model(camera,*miku,trs(vec3(0,-6,9),vec3(0,time,0),vec3(2,2,2)),*earth,1);
         //Draw3DModel(camera,*Sphere(),TRS(Vec3(6,2-fmod(time+4,8),12),Vec3(time,0,0),Vec3_Mul(RINGO_SIZE*0.8,Vec3(1,1,1))),*RingoTexture(),1);

@@ -12,7 +12,7 @@ typedef struct
     char rooms_length;
     //把握しているユーザー
     char registered_users_length;
-    char registered_users[MAX_USER_COUNT][MAX_NAME_SIZE];
+    UserData registered_users[MAX_NAME_SIZE];
     AudioStatus statuses[MAX_USER_COUNT];
     //local dbにアクセスするユーザー
     char user_id;
@@ -39,21 +39,25 @@ void DB_Save(DBData* self,char* path){
 //ユーザーを検索してIDを取得
 int DB_Find_User(DBData* self,char* name){
     for(int i=0;i<self->registered_users_length;i++){
-        if(strcmp(self->registered_users[i],name)==0){
+        if(strcmp(self->registered_users[i].name,name)==0){
             return i;
         }
     }
     return -1;
 }
 //ユーザーを追加してIDを取得
-int DB_Add_User(DBData* self,char* name){
+int DB_Add_User(DBData* self,UserData user){
     //古参は追い出す
     if(self->registered_users_length==MAX_USER_COUNT){
-        memmove(self->registered_users,self->registered_users+1,(MAX_USER_COUNT-1)*sizeof(int));
-        return MAX_USER_COUNT-1;
+         self->registered_users[0]=user;
+        return 0;
     }
-    strcpy(self->registered_users[self->registered_users_length],name);
+    self->registered_users[self->registered_users_length]=user;
     self->registered_users_length++;
     return self->registered_users_length-1;
+}
+//ユーザーを編集
+void DB_Edit_User(DBData* self,char user_id,UserData user){
+    self->registered_users[user_id]=user;
 }
 #endif
