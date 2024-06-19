@@ -332,9 +332,12 @@ void *client_db_thread(void *param)
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
     while(1){
         DBData db_from_server;
+        //serverからaudio statusの変更を禁ずる
+        AudioStatus currentstatus=config->local_db->statuses[config->local_db->user_id];
         int rn=read(s,&db_from_server,sizeof(DBData));
         if(rn>0){
             *config->local_db=db_from_server;
+            config->local_db->statuses[config->local_db->user_id]=currentstatus;
         }
         if(config->request->method[0]==0){
 
