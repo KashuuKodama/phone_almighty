@@ -21,11 +21,16 @@ int main(int argc, char *argv[]){
     DBRequest request;
     if (argc == 4) {
         GenClient(argv[1],atoi(argv[2]),atoi(argv[3]),&db,&request);
+        //test
+        db.user_id=0;
     }
     if (argc == 3) {
         GenServer(atoi(argv[1]),atoi(argv[2]));
         sleep(4);
         GenClient("0.0.0.0",atoi(argv[1]),atoi(argv[2]),&db,&request);
+        //test
+        db.user_id=1;
+        (db.statuses+1)->muted=1;
     }
     Camera* camera=SetupCamera(Deg2Rad*3,240,180);
     camera->pos.z=-1;
