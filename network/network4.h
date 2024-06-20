@@ -197,6 +197,15 @@ void *client_audio_thread(void *param)
         ||config->local_db->current_room_id<0){
             complex double zero[N];
             write(s,zero,N* sizeof(complex double));
+            //吸い出しどく
+            //パイプをノンブロッキングに設定
+            int oldf = fcntl(config->rec_fp->_file, F_GETFL, 0);
+	        fcntl(config->rec_fp->_file, F_SETFL, oldf | O_NONBLOCK);
+            while(fread(data,sizeof(short),SampleSize,config->rec_fp)>0){
+                
+            }
+            //パイプをブロッキングに設定
+            fcntl(config->rec_fp->_file, F_SETFL, oldf);
         } 
         else {
             sample_to_complex(data,X, SampleSize);
