@@ -71,7 +71,7 @@ int RoomsScene(Camera* camera,DBData* db,DBRequests* requests){
         if(selection==0){
             cursor_pos=8.5;
         }
-        float offset=4;
+        float offset=4+selection>0?selection*3.2:0;
         for(int i=0;i<db->rooms_length;i++){
             RoomData* room=DB_Get_Room(db,i);
             Texture2D* icon=Room_Get_Icon(room);

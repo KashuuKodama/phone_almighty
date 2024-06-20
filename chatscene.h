@@ -186,7 +186,7 @@ int ChatScene(Camera* camera,DBData* db,DBRequests* requests){
         }
         BeginCamera(camera);
         draw_3d_model(camera,*circle,trs(vec3(-3.3,5,4),vec3(-Deg2Rad*90,0,0),vec3(0.5,0.5,0.5)),*icon,1);
-        draw_3d_text(camera,room->name,0.01,trs(vec3(-1,5,4),vec3(0,0,0),vec3(0.4,0.4,0.4)),232);
+        draw_3d_text(camera,room->name,0.01,trs(vec3(-1.8+strlen(room->name)*0.2,5,4),vec3(0,0,0),vec3(0.4,0.4,0.4)),232);
         draw_3d_model(camera,*circle,trs(vec3(3.3,5,4),vec3(-Deg2Rad*90,0,0),vec3(0.5,0.5,0.5)),*phone,232);
         draw_3d_model(camera,*plane(),trs(vec3(0,0,10),vec3(0,0,0),vec3(18,27,1)),*back,1);
 
