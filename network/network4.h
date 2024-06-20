@@ -438,7 +438,8 @@ void GenClient(char* ip,int audio_port,int db_port,DBData* db,DBRequests* reques
     db->phone_room_id=-1;
     //初めはトークを選択してない
     db->current_room_id=-1;
-
+    db->statuses[db->user_id].joined=0;
+    db->statuses[db->user_id].muted=0;
     FILE* rec_fp = popen("rec -q -b 16 -c 1 -r 48000 -t raw - 2>log_rec.txt", "r");
     FILE* play_fp = popen("play -q -t raw -b 16 -c 1 -e s -r 48000 - 2>log_play.txt", "w");
     {
