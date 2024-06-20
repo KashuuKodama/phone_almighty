@@ -29,11 +29,12 @@ int RoomsScene(Camera* camera,DBData* db,DBRequests* requests){
     camera->pos=vec3(0,0,0);
     Texture2D* searchbar=open_texture("textures/searchbar.txt");
     Model3D* circle=open_obj("models/circle.obj");
-    int selection= 1;
+    int selection= 0;
     float cursor_pos=0;
     char input_text[MAX_MESSAGE_SIZE];
     strcpy(input_text,DB_Get_Room(db,selection-1)->name);
     db->current_room_id=0;
+    int local_room_count=db->rooms_length;
     while (1)
     {
         UpdateTime();
@@ -62,6 +63,13 @@ int RoomsScene(Camera* camera,DBData* db,DBRequests* requests){
                 case 68:
                     return -1;
                 break;
+            }
+        }
+        //他ユーザーによるルーム追加
+        if(local_room_count!=db->rooms_length){
+            local_room_count=db->rooms_length;
+            if(selection>0&&selection<db->rooms_length+1){
+                strcpy(input_text,DB_Get_Room(db,selection-1)->name);
             }
         }
         BeginCamera(camera);
