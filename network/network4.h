@@ -19,6 +19,7 @@
 #define NETWORK4_H
 #define SampleSize 8192
 #define N (SampleSize*8000/48000)
+#define AMPLIFIER 1;
 typedef struct 
 {
     char ip[256];
@@ -67,7 +68,9 @@ typedef struct
     FILE* rec_fp;
     FILE* play_fp;
 }Client_AudioThread_Config;
-
+complex double  VolumeFilter(complex double  in,double a){
+    return in/sqrt(cabs(in)/a);
+}
 void *toclient_audio_thread(void *param)
 {
     ThreadInfo info=*(ThreadInfo*)param;
@@ -96,7 +99,8 @@ void *toclient_audio_thread(void *param)
         /* データの送信 */
         for(int i=0;i<config->socket_count;i++){
             for(int j=0;j<N;j++){
-                spectrums[i][j]=global_spectrum[j]-spectrums[i][j];
+                spectrums[i][j]=VolumeFilter(global_spectrum[j]-spectrums[i][j],1000);
+
             }
             // printf("w\n");
             // if (db->statuses[i]==1){
@@ -220,7 +224,7 @@ void *client_audio_thread(void *param)
 
             /* エコーキャンセルしない場合 */
             for (int i=0; i<SampleSize;i++){
-                X_canceled[i] = X[i];
+                X_canceled[i] = X[i]*AMPLIFIER;
             }
             // print_complex(stderr,X_canceled,SampleSize);
             // fft(X,Y,SampleSize);
