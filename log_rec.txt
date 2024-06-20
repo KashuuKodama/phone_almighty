@@ -1,2 +1,2 @@
-rec WARN dither: dither clipped 76 samples; decrease volume?
-rec WARN sox: `coreaudio' input clipped 87 samples
+rec WARN dither: dither clipped 7 samples; decrease volume?
+rec WARN sox: `coreaudio' input clipped 10 samples
