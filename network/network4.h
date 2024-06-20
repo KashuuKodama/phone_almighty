@@ -19,7 +19,7 @@
 #define NETWORK4_H
 #define SampleSize 8192
 #define N (SampleSize*8000/48000)
-#define AMPLIFIER 1;
+#define AMPLIFIER 2;
 typedef struct 
 {
     char ip[256];
@@ -69,7 +69,7 @@ typedef struct
     FILE* play_fp;
 }Client_AudioThread_Config;
 complex double  VolumeFilter(complex double  in,double a){
-    return in/sqrt(cabs(in)/a);
+    return in*a/cabs(in)*(sqrt(cabs(in)/a+1)*2-2);
 }
 void *toclient_audio_thread(void *param)
 {
