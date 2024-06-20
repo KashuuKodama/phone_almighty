@@ -1,2 +1,1 @@
-rec WARN dither: dither clipped 138 samples; decrease volume?
-rec WARN sox: `coreaudio' input clipped 153 samples
+rec FAIL sox: `-' error writing output file: Broken pipe
