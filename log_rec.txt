@@ -1,0 +1,9 @@
+rec WARN coreaudio: coreaudio: unhandled buffer overrun.  Data discarded.
+rec WARN coreaudio: coreaudio: unhandled buffer overrun.  Data discarded.
+rec WARN coreaudio: coreaudio: unhandled buffer overrun.  Data discarded.
+rec WARN coreaudio: coreaudio: unhandled buffer overrun.  Data discarded.
+rec WARN coreaudio: coreaudio: unhandled buffer overrun.  Data discarded.
+rec WARN coreaudio: coreaudio: unhandled buffer overrun.  Data discarded.
+rec WARN coreaudio: coreaudio: unhandled buffer overrun.  Data discarded.
+rec WARN coreaudio: coreaudio: unhandled buffer overrun.  Data discarded.
+rec WARN coreaudio: coreaudio: unhandled buffer overrun.  Data discarded.

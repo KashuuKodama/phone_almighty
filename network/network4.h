@@ -386,8 +386,8 @@ void *client_db_thread(void *param)
         int current_room=config->local_db->current_room_id;
         AudioStatus current_status=config->local_db->statuses[config->local_db->user_id];
 
-        if(rn>0){
-            *config->local_db=db_from_server;
+        if(rn==sizeof(DBData)){
+            (*config->local_db)=db_from_server;
             //serverからuseridの変更を禁ずる
             config->local_db->user_id=current_user;
             //serverから選択中のトークの変更を禁ずる
