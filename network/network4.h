@@ -372,6 +372,8 @@ void *client_db_thread(void *param)
     }
     addr.sin_port=htons(info.port);
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
+    //ノンブロッキングに設定
+    fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
     while(1){
         DBData db_from_server;
         int rn=read(s,&db_from_server,sizeof(DBData));
