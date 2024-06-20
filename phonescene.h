@@ -24,12 +24,12 @@
 int PhoneScene(Camera* camera,DBData* db,DBRequests* requests){
     camera->pos=vec3(0,0,-1);
     Texture2D* back=open_texture("textures/back.txt");
-    Texture2D* icon=open_texture("textures/rooms/icon0.txt");
     Texture2D* phone=open_texture("textures/phone.txt");
     Texture2D* phone_red=open_texture("textures/phone_red.txt");
     Model3D* circle=open_obj("models/circle.obj");
     float offset=0;
     RoomData* room=DB_Get_Room(db,db->current_room_id);
+    Texture2D* icon=Room_Get_Icon(room);
 
     //会話に参加する
     Create_Request_Phone(requests,db->current_room_id);

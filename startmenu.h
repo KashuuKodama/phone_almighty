@@ -24,7 +24,7 @@ void StartMenu(Camera* camera,DBData* db,DBRequests* requests){
     Texture2D* earth=open_texture("textures/earth.txt");
     Texture2D* back=open_texture("textures/back.txt");
     Texture2D* side=open_texture("textures/text_side.txt");
-    FILE* profile_fd=fopen("profile/profile.txt","r");
+    FILE* profile_fd=fopen("profile/profile.txt","r+");
     char input_text[MAX_NAME_SIZE];
     char line[30];
     fgets(line,30,profile_fd);
@@ -75,6 +75,7 @@ void StartMenu(Camera* camera,DBData* db,DBRequests* requests){
         }
         //skip
         if(id>=0&&n==3&&keys[0]==27&&keys[1]==91&&keys[2]==67){
+            fprintf(profile_fd,"name:%s",input_text);
             fclose(profile_fd);
             break;
         }
