@@ -32,7 +32,7 @@ int RoomsScene(Camera* camera,DBData* db,DBRequests* requests){
     int selection= 0;
     float cursor_pos=0;
     char input_text[MAX_MESSAGE_SIZE];
-    strcpy(input_text,DB_Get_Room(db,selection-1)->name);
+    strcpy(input_text,"");
     db->current_room_id=0;
     int local_room_count=db->rooms_length;
     while (1)

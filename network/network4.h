@@ -252,6 +252,7 @@ void *toclient_db_thread(void *param)
     ThreadInfo info=*(ThreadInfo*)param;
     Server_DBToClientThread_Config* config=(Server_DBToClientThread_Config*)info.config;
     DBData* db=config->db;
+
     while(1){
         int updateflag=0;
         //read requests
@@ -377,11 +378,10 @@ void *client_db_thread(void *param)
     addr.sin_port=htons(info.port);
     int ret=connect(s,(struct sockaddr*)&addr,sizeof(addr));
     //ノンブロッキングに設定
-    fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
     while(1){
         DBData db_from_server;
+        fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
         int rn=read(s,&db_from_server,sizeof(DBData));
-
         int current_user=config->local_db->user_id;
         int current_room=config->local_db->current_room_id;
         AudioStatus current_status=config->local_db->statuses[config->local_db->user_id];

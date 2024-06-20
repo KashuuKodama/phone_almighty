@@ -4,7 +4,7 @@
 #include "roomdata.h"
 #include "messagedata.h"
 #define MAX_REQUESTS_COUNT 3
-#define MAX_REQUEST_MESSAGE_SIZE 32
+#define MAX_REQUEST_MESSAGE_SIZE 200
 
 typedef struct 
 {
